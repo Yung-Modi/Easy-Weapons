@@ -7,6 +7,7 @@
 /// </summary>
 
 using UnityEngine;
+using System;
 using System.Collections;
 
 public class Health : MonoBehaviour
@@ -27,11 +28,21 @@ public class Health : MonoBehaviour
 
 	private bool dead = false;					// Used to make sure the Die() function isn't called twice
 
+	// Event: (currentHealth, maxHealth)
+	public Action<float, float> OnHealthChanged;
+
+	// Expose current health read-only
+	public float CurrentHealth { get { return currentHealth; } }
+
 	// Use this for initialization
 	void Start()
 	{
 		// Initialize the currentHealth variable to the value specified by the user in startingHealth
 		currentHealth = startingHealth;
+
+		// Notify listeners of initial value
+		if (OnHealthChanged != null)
+			OnHealthChanged(currentHealth, maxHealth);
 	}
 
 	public void ChangeHealth(float amount)
@@ -39,13 +50,19 @@ public class Health : MonoBehaviour
 		// Change the health by the amount specified in the amount variable
 		currentHealth += amount;
 
+		// Clamp to [0, maxHealth]
+		if (currentHealth > maxHealth)
+			currentHealth = maxHealth;
+		if (currentHealth < 0)
+			currentHealth = 0;
+
+		// Notify listeners
+		if (OnHealthChanged != null)
+			OnHealthChanged(currentHealth, maxHealth);
+
 		// If the health runs out, then Die.
 		if (currentHealth <= 0 && !dead && canDie)
 			Die();
-
-		// Make sure that the health never exceeds the maximum health
-		else if (currentHealth > maxHealth)
-			currentHealth = maxHealth;
 	}
 
 	public void Die()
@@ -58,6 +75,10 @@ public class Health : MonoBehaviour
 			Instantiate(deadReplacement, transform.position, transform.rotation);
 		if (makeExplosion)
 			Instantiate(explosion, transform.position, transform.rotation);
+
+		// ensure listeners see zero before destroy
+		if (OnHealthChanged != null)
+			OnHealthChanged(0f, maxHealth);
 
 		if (isPlayer && deathCam != null)
 			deathCam.SetActive(true);
