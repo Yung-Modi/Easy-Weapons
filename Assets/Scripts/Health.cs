@@ -34,14 +34,22 @@ public class Health : MonoBehaviour
 	// Expose current health read-only
 	public float CurrentHealth { get { return currentHealth; } }
 
-	// Use this for initialization
-	void Start()
+	private PlayerRespawn playerRespawn;
+
+    // Use this for initialization
+    void Start()
 	{
 		// Initialize the currentHealth variable to the value specified by the user in startingHealth
 		currentHealth = startingHealth;
 
-		// Notify listeners of initial value
-		if (OnHealthChanged != null)
+		if (isPlayer)
+		{
+			playerRespawn = GetComponent<PlayerRespawn>();
+			
+        }
+
+        // Notify listeners of initial value
+        if (OnHealthChanged != null)
 			OnHealthChanged(currentHealth, maxHealth);
 	}
 
@@ -84,6 +92,22 @@ public class Health : MonoBehaviour
 			deathCam.SetActive(true);
 
 		// Remove this GameObject from the scene
-		Destroy(gameObject);
+		if (isPlayer)
+		{
+			playerRespawn.TryRespawn();
+		}
+		else
+		{
+			Destroy(gameObject);
+		}
 	}
+
+	public void Revive()
+	{
+		dead = false;
+		currentHealth = startingHealth;
+		// Notify listeners
+		if (OnHealthChanged != null)
+			OnHealthChanged(currentHealth, maxHealth);
+    }
 }
