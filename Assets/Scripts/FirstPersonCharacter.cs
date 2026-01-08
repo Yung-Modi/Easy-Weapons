@@ -143,7 +143,7 @@ public class FirstPersonCharacter : MonoBehaviour
 	}
     void OnDrawGizmosSelected()
 		{
-		Gizmos.color = Color.gold;
+		Gizmos.color = Color.red;
 		Gizmos.DrawLine(transform.position, transform.forward* 5f);
 		}
 
