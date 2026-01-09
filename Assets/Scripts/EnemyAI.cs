@@ -181,8 +181,25 @@ public class EnemyAI : MonoBehaviour
         agent.isStopped = true;
         if (Time.time - lastAttackTime >= attackCooldown)
         {
-            // Implement attack logic here (e.g., reduce player health)
+            // Log for debugging
             Debug.Log("Attacking player for " + attackDamage + " damage.");
+
+            // Try to apply damage to the player using the Health component if present.
+            if (player != null)
+            {
+                // Prefer direct component call for type-safety and event firing
+                var healthComp = player.GetComponent<Health>();
+                if (healthComp != null)
+                {
+                    healthComp.ChangeHealth(-attackDamage);
+                }
+                else
+                {
+                    // Fallback: use SendMessageUpwards for compatibility with other health implementations
+                    player.SendMessageUpwards("ChangeHealth", -attackDamage, SendMessageOptions.DontRequireReceiver);
+                }
+            }
+
             lastAttackTime = Time.time;
         }
     }
