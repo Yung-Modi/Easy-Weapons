@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.SceneManagement;
 
 public class PlayerRespawn : MonoBehaviour
 {
@@ -50,6 +51,7 @@ public class PlayerRespawn : MonoBehaviour
 
     /// <summary>
     /// Call this from your death handler. Returns true if a respawn was scheduled; false if there are no respawns left.
+    /// If the last allowed respawn is consumed (player died maxRespawns times), scene 0 will be loaded.
     /// </summary>
     public bool TryRespawn()
     {
@@ -57,14 +59,31 @@ public class PlayerRespawn : MonoBehaviour
 
         if (remainingRespawns <= 0)
         {
-            // no respawns left
+            // Already out of respawns
             OnOutOfRespawns?.Invoke();
             if (destroyOnNoRespawns)
                 Destroy(gameObject);
+
+            // Send player back to scene 0
+            SceneManager.LoadScene(0);
             return false;
         }
 
+        // consume one respawn
         remainingRespawns--;
+
+        // If this consumption used the last respawn, go to scene 0 instead of scheduling another respawn
+        if (remainingRespawns <= 0)
+        {
+            OnOutOfRespawns?.Invoke();
+            if (destroyOnNoRespawns)
+                Destroy(gameObject);
+
+            // Send player back to scene 0
+            SceneManager.LoadScene(0);
+            return false;
+        }
+
         StartCoroutine(DoRespawn());
         OnRespawnScheduled?.Invoke();
         return true;
