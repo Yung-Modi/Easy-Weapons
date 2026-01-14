@@ -17,6 +17,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.InputSystem;
 
 public enum WeaponType
 {
@@ -207,10 +208,11 @@ public class Weapon : MonoBehaviour
 
 	// Other
 	private bool canFire = true;						// Whether or not the weapon can currently fire (used for semi-auto weapons)
+	private bool isFiring = false;                  // Whether or not the weapon is currently firing (used for automatic weapons)
 
 
-	// Use this for initialization
-	void Start()
+    // Use this for initialization
+    void Start()
 	{
 		// Calculate the actual ROF to be used in the weapon systems.  The rateOfFire variable is
 		// designed to make it easier on the user - it represents the number of rounds to be fired
@@ -326,7 +328,7 @@ public class Weapon : MonoBehaviour
 		{
 			if (fireTimer >= actualROF && burstCounter < burstRate && canFire)
 			{
-				if (Input.GetButton("Fire1"))
+				if (isFiring)
 				{
 					if (!warmup)	// Normal firing when the user holds down the fire button
 					{
@@ -337,7 +339,7 @@ public class Weapon : MonoBehaviour
 						heat += Time.deltaTime;
 					}
 				}
-				if (warmup && Input.GetButtonUp("Fire1"))
+				if (warmup && isFiring==false)
 				{
 					if (allowCancel && Input.GetButton("Cancel"))
 					{
@@ -355,7 +357,7 @@ public class Weapon : MonoBehaviour
 		{
 			if (fireTimer >= actualROF && burstCounter < burstRate && canFire)
 			{
-				if (Input.GetButton("Fire1"))
+				if (isFiring)
 				{
 					if (!warmup)	// Normal firing when the user holds down the fire button
 					{
@@ -366,7 +368,7 @@ public class Weapon : MonoBehaviour
 						heat += Time.deltaTime;
 					}
 				}
-				if (warmup && Input.GetButtonUp("Fire1"))
+				if (warmup && isFiring == false)
 				{
 					if (allowCancel && Input.GetButton("Cancel"))
 					{
@@ -393,7 +395,7 @@ public class Weapon : MonoBehaviour
 		// Shoot a beam if this is a beam type weapon and the user presses the fire button
 		if (type == WeaponType.Beam)
 		{
-			if (Input.GetButton("Fire1") && beamHeat <= maxBeamHeat && !coolingDown)
+			if (isFiring && beamHeat <= maxBeamHeat && !coolingDown)
 			{
 				Beam();
 			}
@@ -417,7 +419,7 @@ public class Weapon : MonoBehaviour
 			Reload();
 
 		// If the weapon is semi-auto and the user lets up on the button, set canFire to true
-		if (Input.GetButtonUp("Fire1"))
+		if (isFiring==false)
 			canFire = true;
 	}
 
@@ -1124,6 +1126,11 @@ public class Weapon : MonoBehaviour
         }
 
         return hitMesh;
+    }
+
+	public void OnFire(InputValue inputValue)
+	{ 
+		isFiring = inputValue.isPressed;
     }
 }
 
