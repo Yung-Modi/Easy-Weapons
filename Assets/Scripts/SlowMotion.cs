@@ -1,17 +1,19 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.InputSystem;
 
 public class SlowMotion : MonoBehaviour
 {
 	public bool enableSloMo = true;
+	public bool timeSlow = false;
 
-	
-	// Update is called once per frame
-	void Update ()
+
+    // Update is called once per frame
+    void Update ()
 	{
 		if (enableSloMo)
 		{
-			if (Input.GetKey(KeyCode.Q))
+			if (timeSlow)
 			{
 				Time.timeScale = 0.25f;
 			}
@@ -23,4 +25,9 @@ public class SlowMotion : MonoBehaviour
 			Time.fixedDeltaTime = 0.02F * Time.timeScale;
 		}
 	}
+
+	public void OnTimeSlow(InputValue inputValue)
+	{
+        timeSlow = inputValue.isPressed;
+    }
 }

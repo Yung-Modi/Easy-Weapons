@@ -34,9 +34,18 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "SwapWeapons",
+                    "name": "NextWeapon",
                     "type": "Button",
                     "id": "eed72076-8bd2-41d8-8e9f-0dea1eb5b66a",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "PreviousWeapon",
+                    "type": "Button",
+                    "id": "120d1ff1-2516-467a-a1c7-f1c32fc38262",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -48,7 +57,7 @@
                     "id": "08353190-0068-49de-b5f2-24002bcee584",
                     "expectedControlType": "",
                     "processors": "",
-                    "interactions": "",
+                    "interactions": "Press(behavior=2)",
                     "initialStateCheck": false
                 },
                 {
@@ -66,7 +75,7 @@
                     "id": "f43de1ba-fc5a-4ab8-b8d5-45171d7cad7e",
                     "expectedControlType": "",
                     "processors": "",
-                    "interactions": "",
+                    "interactions": "Press(behavior=2)",
                     "initialStateCheck": false
                 }
             ],
@@ -294,22 +303,11 @@
                 {
                     "name": "",
                     "id": "37b85746-7ca9-484d-9872-e1f433a932a8",
-                    "path": "<Gamepad>/buttonNorth",
+                    "path": "<Gamepad>/dpad/right",
                     "interactions": "",
                     "processors": "",
                     "groups": ";Gamepad",
-                    "action": "SwapWeapons",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "12b1f1e0-6931-49ea-a416-66a341a80201",
-                    "path": "<Keyboard>/tab",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": ";Keyboard&Mouse",
-                    "action": "SwapWeapons",
+                    "action": "NextWeapon",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -360,11 +358,33 @@
                 {
                     "name": "",
                     "id": "4a9b344b-09f9-4eb4-8b3b-9b0165fae626",
-                    "path": "",
+                    "path": "<Keyboard>/r",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": ";Keyboard&Mouse",
                     "action": "Reload",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "c48d1996-9073-44bf-b3fc-28fedcfac4bd",
+                    "path": "<Gamepad>/buttonWest",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "Reload",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "42bec700-f477-4076-8c9b-dc49f5065043",
+                    "path": "<Gamepad>/dpad/left",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "PreviousWeapon",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

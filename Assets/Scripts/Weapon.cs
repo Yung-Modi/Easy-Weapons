@@ -70,145 +70,147 @@ public class SmartBulletHoleGroup
 public class Weapon : MonoBehaviour
 {
 	// Weapon Type
-	public WeaponType type = WeaponType.Projectile;		// Which weapon system should be used
-	
+	public WeaponType type = WeaponType.Projectile;     // Which weapon system should be used
+
 	// External Tools
-	public bool shooterAIEnabled = false;				// Enable features compatible with Shooter AI by Gateway Games
-	public bool bloodyMessEnabled = false;				// Enable features compatible with Bloody Mess by Heavy Diesel Softworks
-	public int weaponType = 0;							// Bloody mess property
+	public bool shooterAIEnabled = false;               // Enable features compatible with Shooter AI by Gateway Games
+	public bool bloodyMessEnabled = false;              // Enable features compatible with Bloody Mess by Heavy Diesel Softworks
+	public int weaponType = 0;                          // Bloody mess property
 
 	// Auto
-	public Auto auto = Auto.Full;						// How does this weapon fire - semi-auto or full-auto
+	public Auto auto = Auto.Full;                       // How does this weapon fire - semi-auto or full-auto
 
 	// General
-	public bool playerWeapon = true;					// Whether or not this is a player's weapon as opposed to an AI's weapon
-	public GameObject weaponModel;						// The actual mesh for this weapon
-	public Transform raycastStartSpot;					// The spot that the raycasting weapon system should use as an origin for rays
-	public float delayBeforeFire = 0.0f;				// An optional delay that causes the weapon to fire a specified amount of time after it normally would (0 for no delay)
+	public bool playerWeapon = true;                    // Whether or not this is a player's weapon as opposed to an AI's weapon
+	public GameObject weaponModel;                      // The actual mesh for this weapon
+	public Transform raycastStartSpot;                  // The spot that the raycasting weapon system should use as an origin for rays
+	public float delayBeforeFire = 0.0f;                // An optional delay that causes the weapon to fire a specified amount of time after it normally would (0 for no delay)
 
 	// Warmup
-	public bool warmup = false;							// Whether or not the shot will be allowed to "warmup" before firing - allows power to increase when the player holds down fire button longer
+	public bool warmup = false;                         // Whether or not the shot will be allowed to "warmup" before firing - allows power to increase when the player holds down fire button longer
 														// Only works on semi-automatic raycast and projectile weapons
-	public float maxWarmup = 2.0f;						// The maximum amount of time a warmup can have any effect on power, etc.
-	public bool multiplyForce = true;					// Whether or not the initial force of the projectile should be multiplied based on warmup heat value - only for projectiles
-	public bool multiplyPower = false;					// Whether or not the damage of the projectile should be multiplied based on warmup heat value - only for projectiles
+	public float maxWarmup = 2.0f;                      // The maximum amount of time a warmup can have any effect on power, etc.
+	public bool multiplyForce = true;                   // Whether or not the initial force of the projectile should be multiplied based on warmup heat value - only for projectiles
+	public bool multiplyPower = false;                  // Whether or not the damage of the projectile should be multiplied based on warmup heat value - only for projectiles
 														// Also only has an effect on projectiles using the direct damage system - an example would be an arrow that causes more damage the longer you pull back your bow
-	public float powerMultiplier = 1.0f;				// The multiplier by which the warmup can affect weapon power; power = power * (heat * powerMultiplier)
-	public float initialForceMultiplier = 1.0f;			// The multiplier by which the warmup can affect the initial force, assuming a projectile system
-	public bool allowCancel = false;					// If true, the player can cancel this warmed up shot by pressing the "Cancel" input button, otherwise a shot will be fired when the player releases the fire key
-	private float heat = 0.0f;							// The amount of time the weapon has been warming up, can be in the range of (0, maxWarmup)
+	public float powerMultiplier = 1.0f;                // The multiplier by which the warmup can affect weapon power; power = power * (heat * powerMultiplier)
+	public float initialForceMultiplier = 1.0f;         // The multiplier by which the warmup can affect the initial force, assuming a projectile system
+	public bool allowCancel = false;                    // If true, the player can cancel this warmed up shot by pressing the "Cancel" input button, otherwise a shot will be fired when the player releases the fire key
+	private float heat = 0.0f;                          // The amount of time the weapon has been warming up, can be in the range of (0, maxWarmup)
 
 	// Projectile
-	public GameObject projectile;						// The projectile to be launched (if the type is projectile)
-	public Transform projectileSpawnSpot;				// The spot where the projectile should be instantiated
+	public GameObject projectile;                       // The projectile to be launched (if the type is projectile)
+	public Transform projectileSpawnSpot;               // The spot where the projectile should be instantiated
 
 	// Beam
-	public bool reflect = true;							// Whether or not the laser beam should reflect off of certain surfaces
-	public Material reflectionMaterial;					// The material that reflects the laser.  If this is null, the laser will reflect off all surfaces
-	public int maxReflections = 5;						// The maximum number of times the laser beam can reflect off surfaces.  Without this limit, the system can possibly become stuck in an infinite loop
-	public string beamTypeName = "laser_beam";			// This is the name that will be used as the name of the instantiated beam effect.  It is not necessary.
-	public float maxBeamHeat = 1.0f;					// The time, in seconds, that the beam will last
-	public bool infiniteBeam = false;					// If this is true the beam will never overheat (equivalent to infinite ammo)
-	public Material beamMaterial;						// The material that will be used in the beam (line renderer.)  This should be a particle material
-	public Color beamColor = Color.red;					// The color that will be used to tint the beam material
-	public float startBeamWidth = 0.5f;					// The width of the beam on the starting side
-	public float endBeamWidth = 1.0f;					// The width of the beam on the ending side
-	private float beamHeat = 0.0f;						// Timer to keep track of beam warmup and cooldown
-	private bool coolingDown = false;					// Whether or not the beam weapon is currently cooling off.  This is used to make sure the weapon isn't fired when it's too close to the maximum heat level
-	private GameObject beamGO;							// The reference to the instantiated beam GameObject
-	private bool beaming = false;						// Whether or not the weapon is currently firing a beam - used to make sure StopBeam() is called after the beam is no longer being fired
+	public bool reflect = true;                         // Whether or not the laser beam should reflect off of certain surfaces
+	public Material reflectionMaterial;                 // The material that reflects the laser.  If this is null, the laser will reflect off all surfaces
+	public int maxReflections = 5;                      // The maximum number of times the laser beam can reflect off surfaces.  Without this limit, the system can possibly become stuck in an infinite loop
+	public string beamTypeName = "laser_beam";          // This is the name that will be used as the name of the instantiated beam effect.  It is not necessary.
+	public float maxBeamHeat = 1.0f;                    // The time, in seconds, that the beam will last
+	public bool infiniteBeam = false;                   // If this is true the beam will never overheat (equivalent to infinite ammo)
+	public Material beamMaterial;                       // The material that will be used in the beam (line renderer.)  This should be a particle material
+	public Color beamColor = Color.red;                 // The color that will be used to tint the beam material
+	public float startBeamWidth = 0.5f;                 // The width of the beam on the starting side
+	public float endBeamWidth = 1.0f;                   // The width of the beam on the ending side
+	private float beamHeat = 0.0f;                      // Timer to keep track of beam warmup and cooldown
+	private bool coolingDown = false;                   // Whether or not the beam weapon is currently cooling off.  This is used to make sure the weapon isn't fired when it's too close to the maximum heat level
+	private GameObject beamGO;                          // The reference to the instantiated beam GameObject
+	private bool beaming = false;                       // Whether or not the weapon is currently firing a beam - used to make sure StopBeam() is called after the beam is no longer being fired
 
 	// Power
-	public float power = 80.0f;							// The amount of power this weapon has (how much damage it can cause) (if the type is raycast or beam)
-	public float forceMultiplier = 10.0f;				// Multiplier used to change the amount of force applied to rigid bodies that are shot
-	public float beamPower = 1.0f;						// Used to determine damage caused by beam weapons.  This will be much lower because this amount is applied to the target every frame while firing
+	public float power = 80.0f;                         // The amount of power this weapon has (how much damage it can cause) (if the type is raycast or beam)
+	public float forceMultiplier = 10.0f;               // Multiplier used to change the amount of force applied to rigid bodies that are shot
+	public float beamPower = 1.0f;                      // Used to determine damage caused by beam weapons.  This will be much lower because this amount is applied to the target every frame while firing
 
 	// Range
-	public float range = 9999.0f;						// How far this weapon can shoot (for raycast and beam)
+	public float range = 9999.0f;                       // How far this weapon can shoot (for raycast and beam)
 
 	// Rate of Fire
-	public float rateOfFire = 10;						// The number of rounds this weapon fires per second
-	private float actualROF;							// The frequency between shots based on the rateOfFire
-	private float fireTimer;							// Timer used to fire at a set frequency
+	public float rateOfFire = 10;                       // The number of rounds this weapon fires per second
+	private float actualROF;                            // The frequency between shots based on the rateOfFire
+	private float fireTimer;                            // Timer used to fire at a set frequency
 
 	// Ammo
-	public bool infiniteAmmo = false;					// Whether or not this weapon should have unlimited ammo
-	public int ammoCapacity = 12;						// The number of rounds this weapon can fire before it has to reload
-	public int shotPerRound = 1;						// The number of "bullets" that will be fired on each round.  Usually this will be 1, but set to a higher number for things like shotguns with spread
-	private int currentAmmo;							// How much ammo the weapon currently has
-	public float reloadTime = 2.0f;						// How much time it takes to reload the weapon
-	public bool showCurrentAmmo = true;					// Whether or not the current ammo should be displayed in the GUI
-	public bool reloadAutomatically = true;				// Whether or not the weapon should reload automatically when out of ammo
+	public bool infiniteAmmo = false;                   // Whether or not this weapon should have unlimited ammo
+	public int ammoCapacity = 12;                       // The number of rounds this weapon can fire before it has to reload
+	public int shotPerRound = 1;                        // The number of "bullets" that will be fired on each round.  Usually this will be 1, but set to a higher number for things like shotguns with spread
+	private int currentAmmo;                            // How much ammo the weapon currently has
+	public float reloadTime = 2.0f;                     // How much time it takes to reload the weapon
+	public bool showCurrentAmmo = true;                 // Whether or not the current ammo should be displayed in the GUI
+	public bool reloadAutomatically = true;             // Whether or not the weapon should reload automatically when out of ammo
+	public bool isReloading = false;                    // Whether or not the weapon is currently reloading
 
 	// Accuracy
-	public float accuracy = 80.0f;						// How accurate this weapon is on a scale of 0 to 100
-	private float currentAccuracy;						// Holds the current accuracy.  Used for varying accuracy based on speed, etc.
-	public float accuracyDropPerShot = 1.0f;			// How much the accuracy will decrease on each shot
-	public float accuracyRecoverRate = 0.1f;			// How quickly the accuracy recovers after each shot (value between 0 and 1)
+	public float accuracy = 80.0f;                      // How accurate this weapon is on a scale of 0 to 100
+	private float currentAccuracy;                      // Holds the current accuracy.  Used for varying accuracy based on speed, etc.
+	public float accuracyDropPerShot = 1.0f;            // How much the accuracy will decrease on each shot
+	public float accuracyRecoverRate = 0.1f;            // How quickly the accuracy recovers after each shot (value between 0 and 1)
 
 	// Burst
-	public int burstRate = 3;							// The number of shots fired per each burst
-	public float burstPause = 0.0f;						// The pause time between bursts
-	private int burstCounter = 0;						// Counter to keep track of how many shots have been fired per burst
-	private float burstTimer = 0.0f;					// Timer to keep track of how long the weapon has paused between bursts
+	public int burstRate = 3;                           // The number of shots fired per each burst
+	public float burstPause = 0.0f;                     // The pause time between bursts
+	private int burstCounter = 0;                       // Counter to keep track of how many shots have been fired per burst
+	private float burstTimer = 0.0f;                    // Timer to keep track of how long the weapon has paused between bursts
 
 	// Recoil
-	public bool recoil = true;							// Whether or not this weapon should have recoil
-	public float recoilKickBackMin = 0.1f;				// The minimum distance the weapon will kick backward when fired
-	public float recoilKickBackMax = 0.3f;				// The maximum distance the weapon will kick backward when fired
-	public float recoilRotationMin = 0.1f;				// The minimum rotation the weapon will kick when fired
-	public float recoilRotationMax = 0.25f;				// The maximum rotation the weapon will kick when fired
-	public float recoilRecoveryRate = 0.01f;			// The rate at which the weapon recovers from the recoil displacement
+	public bool recoil = true;                          // Whether or not this weapon should have recoil
+	public float recoilKickBackMin = 0.1f;              // The minimum distance the weapon will kick backward when fired
+	public float recoilKickBackMax = 0.3f;              // The maximum distance the weapon will kick backward when fired
+	public float recoilRotationMin = 0.1f;              // The minimum rotation the weapon will kick when fired
+	public float recoilRotationMax = 0.25f;             // The maximum rotation the weapon will kick when fired
+	public float recoilRecoveryRate = 0.01f;            // The rate at which the weapon recovers from the recoil displacement
 
 	// Effects
-	public bool spitShells = false;						// Whether or not this weapon should spit shells out of the side
-	public GameObject shell;							// A shell prop to spit out the side of the weapon
-	public float shellSpitForce = 1.0f;					// The force with which shells will be spit out of the weapon
-	public float shellForceRandom = 0.5f;				// The variant by which the spit force can change + or - for each shot
-	public float shellSpitTorqueX = 0.0f;				// The torque with which the shells will rotate on the x axis
-	public float shellSpitTorqueY = 0.0f;				// The torque with which the shells will rotate on the y axis
-	public float shellTorqueRandom = 1.0f;				// The variant by which the spit torque can change + or - for each shot
-	public Transform shellSpitPosition;					// The spot where the weapon should spit shells from
-	public bool makeMuzzleEffects = true;				// Whether or not the weapon should make muzzle effects
-    public GameObject[] muzzleEffects = 
-        new GameObject[] {null};			            // Effects to appear at the muzzle of the gun (muzzle flash, smoke, etc.)
-	public Transform muzzleEffectsPosition;				// The spot where the muzzle effects should appear from
-	public bool makeHitEffects = true;					// Whether or not the weapon should make hit effects
+	public bool spitShells = false;                     // Whether or not this weapon should spit shells out of the side
+	public GameObject shell;                            // A shell prop to spit out the side of the weapon
+	public float shellSpitForce = 1.0f;                 // The force with which shells will be spit out of the weapon
+	public float shellForceRandom = 0.5f;               // The variant by which the spit force can change + or - for each shot
+	public float shellSpitTorqueX = 0.0f;               // The torque with which the shells will rotate on the x axis
+	public float shellSpitTorqueY = 0.0f;               // The torque with which the shells will rotate on the y axis
+	public float shellTorqueRandom = 1.0f;              // The variant by which the spit torque can change + or - for each shot
+	public Transform shellSpitPosition;                 // The spot where the weapon should spit shells from
+	public bool makeMuzzleEffects = true;               // Whether or not the weapon should make muzzle effects
+	public GameObject[] muzzleEffects =
+		new GameObject[] { null };                      // Effects to appear at the muzzle of the gun (muzzle flash, smoke, etc.)
+	public Transform muzzleEffectsPosition;             // The spot where the muzzle effects should appear from
+	public bool makeHitEffects = true;                  // Whether or not the weapon should make hit effects
 	public GameObject[] hitEffects =
-        new GameObject[] {null};						// Effects to be displayed where the "bullet" hit
+		new GameObject[] { null };                      // Effects to be displayed where the "bullet" hit
 
 	// Bullet Holes
-	public bool makeBulletHoles = true;					// Whether or not bullet holes should be made
-	public BulletHoleSystem bhSystem = BulletHoleSystem.Tag;	// What condition the dynamic bullet holes should be based off
+	public bool makeBulletHoles = true;                 // Whether or not bullet holes should be made
+	public BulletHoleSystem bhSystem = BulletHoleSystem.Tag;    // What condition the dynamic bullet holes should be based off
 	public List<string> bulletHolePoolNames = new
-		List<string>();									// A list of strings holding the names of bullet hole pools in the scene
+		List<string>();                                 // A list of strings holding the names of bullet hole pools in the scene
 	public List<string> defaultBulletHolePoolNames =
-		new List<string>();								// A list of strings holding the names of default bullet hole pools in the scene
+		new List<string>();                             // A list of strings holding the names of default bullet hole pools in the scene
 	public List<SmartBulletHoleGroup> bulletHoleGroups =
-		new List<SmartBulletHoleGroup>();				// A list of bullet hole groups.  Each one holds a tag for GameObjects that might be hit, as well as a corresponding bullet hole
-    public List<BulletHolePool> defaultBulletHoles = 
-        new List<BulletHolePool>();                     // A list of default bullet holes to be instantiated when none of the custom parameters are met
+		new List<SmartBulletHoleGroup>();               // A list of bullet hole groups.  Each one holds a tag for GameObjects that might be hit, as well as a corresponding bullet hole
+	public List<BulletHolePool> defaultBulletHoles =
+		new List<BulletHolePool>();                     // A list of default bullet holes to be instantiated when none of the custom parameters are met
 	public List<SmartBulletHoleGroup> bulletHoleExceptions =
-		new List<SmartBulletHoleGroup>();				// A list of SmartBulletHoleGroup objects that defines conditions for when no bullet hole will be instantiated.
+		new List<SmartBulletHoleGroup>();               // A list of SmartBulletHoleGroup objects that defines conditions for when no bullet hole will be instantiated.
 														// In other words, the bullet holes in the defaultBulletHoles list will be instantiated on any surface except for
 														// the ones specified in this list.
 
 	// Crosshairs
-	public bool showCrosshair = true;					// Whether or not the crosshair should be displayed
-	public Texture2D crosshairTexture;					// The texture used to draw the crosshair
-	public int crosshairLength = 10;					// The length of each crosshair line
-	public int crosshairWidth = 4;						// The width of each crosshair line
-	public float startingCrosshairSize = 10.0f;			// The gap of space (in pixels) between the crosshair lines (for weapon inaccuracy)
-	private float currentCrosshairSize;					// The gap of space between crosshair lines that is updated based on weapon accuracy in realtime
+	public bool showCrosshair = true;                   // Whether or not the crosshair should be displayed
+	public Texture2D crosshairTexture;                  // The texture used to draw the crosshair
+	public int crosshairLength = 10;                    // The length of each crosshair line
+	public int crosshairWidth = 4;                      // The width of each crosshair line
+	public float startingCrosshairSize = 10.0f;         // The gap of space (in pixels) between the crosshair lines (for weapon inaccuracy)
+	private float currentCrosshairSize;                 // The gap of space between crosshair lines that is updated based on weapon accuracy in realtime
 
 	// Audio
-	public AudioClip fireSound;							// Sound to play when the weapon is fired
-	public AudioClip reloadSound;						// Sound to play when the weapon is reloading
-	public AudioClip dryFireSound;						// Sound to play when the user tries to fire but is out of ammo
+	public AudioClip fireSound;                         // Sound to play when the weapon is fired
+	public AudioClip reloadSound;                       // Sound to play when the weapon is reloading
+	public AudioClip dryFireSound;                      // Sound to play when the user tries to fire but is out of ammo
 
 	// Other
-	private bool canFire = true;						// Whether or not the weapon can currently fire (used for semi-auto weapons)
+	private bool canFire = true;                        // Whether or not the weapon can currently fire (used for semi-auto weapons)
 	private bool isFiring = false;                  // Whether or not the weapon is currently firing (used for automatic weapons)
+	private bool holdingFire = false;                  // Whether or not the fire button is currently being held down (used for warmup weapons)
 
 
     // Use this for initialization
@@ -221,7 +223,7 @@ public class Weapon : MonoBehaviour
 			actualROF = 1.0f / rateOfFire;
 		else
 			actualROF = 0.01f;
-		
+
 		// Initialize the current crosshair size variable to the starting value specified by the user
 		currentCrosshairSize = startingCrosshairSize;
 
@@ -237,25 +239,25 @@ public class Weapon : MonoBehaviour
 			gameObject.AddComponent(typeof(AudioSource));
 		}
 
-        // Make sure raycastStartSpot isn't null
-        if (raycastStartSpot == null)
-            raycastStartSpot = gameObject.transform;
+		// Make sure raycastStartSpot isn't null
+		if (raycastStartSpot == null)
+			raycastStartSpot = gameObject.transform;
 
-        // Make sure muzzleEffectsPosition isn't null
-        if (muzzleEffectsPosition == null)
-            muzzleEffectsPosition = gameObject.transform;
+		// Make sure muzzleEffectsPosition isn't null
+		if (muzzleEffectsPosition == null)
+			muzzleEffectsPosition = gameObject.transform;
 
-        // Make sure projectileSpawnSpot isn't null
-        if (projectileSpawnSpot == null)
-            projectileSpawnSpot = gameObject.transform;
+		// Make sure projectileSpawnSpot isn't null
+		if (projectileSpawnSpot == null)
+			projectileSpawnSpot = gameObject.transform;
 
-        // Make sure weaponModel isn't null
-        if (weaponModel == null)
-            weaponModel = gameObject;
+		// Make sure weaponModel isn't null
+		if (weaponModel == null)
+			weaponModel = gameObject;
 
-        // Make sure crosshairTexture isn't null
-        if (crosshairTexture == null)
-            crosshairTexture = new Texture2D(0, 0);
+		// Make sure crosshairTexture isn't null
+		if (crosshairTexture == null)
+			crosshairTexture = new Texture2D(0, 0);
 
 		// Initialize the bullet hole pools list
 		for (int i = 0; i < bulletHolePoolNames.Count; i++)
@@ -267,7 +269,7 @@ public class Weapon : MonoBehaviour
 			else
 				Debug.LogWarning("Bullet Hole Pool does not exist or does not have a BulletHolePool component.  Please assign GameObjects in the inspector that have the BulletHolePool component.");
 		}
-		
+
 		// Initialize the default bullet hole pools list
 		for (int i = 0; i < defaultBulletHolePoolNames.Count; i++)
 		{
@@ -279,11 +281,11 @@ public class Weapon : MonoBehaviour
 				Debug.LogWarning("Default Bullet Hole Pool does not have a BulletHolePool component.  Please assign GameObjects in the inspector that have the BulletHolePool component.");
 		}
 	}
-	
+
 	// Update is called once per frame
 	void Update()
 	{
-		
+
 		// Calculate the current accuracy for this weapon
 		currentAccuracy = Mathf.Lerp(currentAccuracy, accuracy, accuracyRecoverRate * Time.deltaTime);
 
@@ -315,7 +317,7 @@ public class Weapon : MonoBehaviour
 		{
 			if (!beaming)
 				StopBeam();
-			beaming = false;	// The beaming variable is set to true every frame that the Beam() method is called
+			beaming = false;    // The beaming variable is set to true every frame that the Beam() method is called
 		}
 	}
 
@@ -330,16 +332,16 @@ public class Weapon : MonoBehaviour
 			{
 				if (isFiring)
 				{
-					if (!warmup)	// Normal firing when the user holds down the fire button
+					if (!warmup)    // Normal firing when the user holds down the fire button
 					{
 						Fire();
 					}
-					else if (heat < maxWarmup)	// Otherwise just add to the warmup until the user lets go of the button
+					else if (heat < maxWarmup)  // Otherwise just add to the warmup until the user lets go of the button
 					{
 						heat += Time.deltaTime;
 					}
 				}
-				if (warmup && isFiring==false)
+				if (warmup && isFiring == false)
 				{
 					if (allowCancel && Input.GetButton("Cancel"))
 					{
@@ -359,16 +361,17 @@ public class Weapon : MonoBehaviour
 			{
 				if (isFiring)
 				{
-					if (!warmup)	// Normal firing when the user holds down the fire button
+					if (!warmup)    // Normal firing when the user holds down the fire button
 					{
 						Launch();
 					}
-					else if (heat < maxWarmup)	// Otherwise just add to the warmup until the user lets go of the button
+					else if (heat < maxWarmup)  // Otherwise just add to the warmup until the user lets go of the button
 					{
 						heat += Time.deltaTime;
-					}
+						holdingFire = true;
+                    }
 				}
-				if (warmup && isFiring == false)
+				if (warmup && isFiring == false && holdingFire)
 				{
 					if (allowCancel && Input.GetButton("Cancel"))
 					{
@@ -377,7 +380,8 @@ public class Weapon : MonoBehaviour
 					else
 					{
 						Launch();
-					}
+						holdingFire = false;
+                    }
 				}
 			}
 
@@ -415,11 +419,11 @@ public class Weapon : MonoBehaviour
 		}
 
 		// Reload if the "Reload" button is pressed
-		if (Input.GetButtonDown("Reload"))
+		if (isReloading)
 			Reload();
 
 		// If the weapon is semi-auto and the user lets up on the button, set canFire to true
-		if (isFiring==false)
+		if (isFiring == false)
 			canFire = true;
 	}
 
@@ -438,7 +442,7 @@ public class Weapon : MonoBehaviour
 		{
 			if (fireTimer >= actualROF && burstCounter < burstRate && canFire)
 			{
-				StartCoroutine(DelayFire());	// Fires after the amount of time specified in delayBeforeFire
+				StartCoroutine(DelayFire());    // Fires after the amount of time specified in delayBeforeFire
 			}
 		}
 		// Launch a projectile if this is a projectile type weapon
@@ -496,7 +500,7 @@ public class Weapon : MonoBehaviour
 
 		// Send a messsage so that users can do other actions whenever this happens
 		SendMessageUpwards("OnEasyWeaponsFire", SendMessageOptions.DontRequireReceiver);
-		
+
 		yield return new WaitForSeconds(delayBeforeFire);
 		Fire();
 	}
@@ -615,10 +619,10 @@ public class Weapon : MonoBehaviour
 					damage *= heat * powerMultiplier;
 					heat = 0.0f;
 				}
-				
+
 				// Damage
 				hit.collider.gameObject.SendMessageUpwards("ChangeHealth", -damage, SendMessageOptions.DontRequireReceiver);
-				
+
 				if (shooterAIEnabled)
 				{
 					hit.transform.SendMessageUpwards("Damage", damage / 100, SendMessageOptions.DontRequireReceiver);
@@ -692,27 +696,27 @@ public class Weapon : MonoBehaviour
 				{
 					// A list of the bullet hole prefabs to choose from
 					List<SmartBulletHoleGroup> holes = new List<SmartBulletHoleGroup>();
-					
+
 					// Display the bullet hole groups based on tags
-                    if (bhSystem == BulletHoleSystem.Tag)
+					if (bhSystem == BulletHoleSystem.Tag)
 					{
-                        foreach (SmartBulletHoleGroup bhg in bulletHoleGroups)
-                        {
-                            if (hit.collider.gameObject.tag == bhg.tag)
+						foreach (SmartBulletHoleGroup bhg in bulletHoleGroups)
+						{
+							if (hit.collider.gameObject.tag == bhg.tag)
 							{
 								holes.Add(bhg);
 							}
-                        }
+						}
 					}
 
-                    // Display the bullet hole groups based on materials
+					// Display the bullet hole groups based on materials
 					else if (bhSystem == BulletHoleSystem.Material)
 					{
-                        // Get the mesh that was hit, if any
-                        MeshRenderer mesh = FindMeshRenderer(hit.collider.gameObject);
+						// Get the mesh that was hit, if any
+						MeshRenderer mesh = FindMeshRenderer(hit.collider.gameObject);
 
-                        foreach (SmartBulletHoleGroup bhg in bulletHoleGroups)
-                        {
+						foreach (SmartBulletHoleGroup bhg in bulletHoleGroups)
+						{
 							if (mesh != null)
 							{
 								if (mesh.sharedMaterial == bhg.material)
@@ -720,24 +724,24 @@ public class Weapon : MonoBehaviour
 									holes.Add(bhg);
 								}
 							}
-                        }
+						}
 					}
 
-                    // Display the bullet hole groups based on physic materials
+					// Display the bullet hole groups based on physic materials
 					else if (bhSystem == BulletHoleSystem.Physic_Material)
 					{
-                        foreach (SmartBulletHoleGroup bhg in bulletHoleGroups)
-                        {
-                            if (hit.collider.sharedMaterial == bhg.physicMaterial)
-                            {
-                                holes.Add(bhg);
-                            }
-                        }
+						foreach (SmartBulletHoleGroup bhg in bulletHoleGroups)
+						{
+							if (hit.collider.sharedMaterial == bhg.physicMaterial)
+							{
+								holes.Add(bhg);
+							}
+						}
 					}
 
 
 					SmartBulletHoleGroup sbhg = null;
-					
+
 					// If no bullet holes were specified for this parameter, use the default bullet holes
 					if (holes.Count == 0)   // If no usable (for this hit GameObject) bullet holes were found...
 					{
@@ -746,11 +750,11 @@ public class Weapon : MonoBehaviour
 						{
 							defaultsToUse.Add(new SmartBulletHoleGroup("Default", null, null, h));
 						}
-						
+
 						// Choose a bullet hole at random from the list
 						sbhg = defaultsToUse[Random.Range(0, defaultsToUse.Count)];
 					}
-					
+
 					// Make the actual bullet hole GameObject
 					else
 					{
@@ -762,14 +766,14 @@ public class Weapon : MonoBehaviour
 					if (sbhg.bulletHole != null)
 						sbhg.bulletHole.PlaceBulletHole(hit.point, Quaternion.FromToRotation(Vector3.up, hit.normal));
 				}
-				
+
 				// Hit Effects
 				if (makeHitEffects)
 				{
 					foreach (GameObject hitEffect in hitEffects)
 					{
 						if (hitEffect != null)
-                            Instantiate(hitEffect, hit.point, Quaternion.FromToRotation(Vector3.up, hit.normal));
+							Instantiate(hitEffect, hit.point, Quaternion.FromToRotation(Vector3.up, hit.normal));
 					}
 				}
 
@@ -784,7 +788,7 @@ public class Weapon : MonoBehaviour
 		// Recoil
 		if (recoil)
 			Recoil();
-		
+
 		// Muzzle flash effects
 		if (makeMuzzleEffects)
 		{
@@ -828,7 +832,7 @@ public class Weapon : MonoBehaviour
 		// Subtract 1 from the current ammo
 		if (!infiniteAmmo)
 			currentAmmo--;
-		
+
 		// Fire once for each shotPerRound value
 		for (int i = 0; i < shotPerRound; i++)
 		{
@@ -853,7 +857,7 @@ public class Weapon : MonoBehaviour
 				Debug.Log("Projectile to be instantiated is null.  Make sure to set the Projectile field in the inspector.");
 			}
 		}
-		
+
 		// Recoil
 		if (recoil)
 			Recoil();
@@ -873,20 +877,20 @@ public class Weapon : MonoBehaviour
 			shellGO.GetComponent<Rigidbody>().AddRelativeForce(new Vector3(shellSpitForce + Random.Range(0, shellForceRandom), 0, 0), ForceMode.Impulse);
 			shellGO.GetComponent<Rigidbody>().AddRelativeTorque(new Vector3(shellSpitTorqueX + Random.Range(-shellTorqueRandom, shellTorqueRandom), shellSpitTorqueY + Random.Range(-shellTorqueRandom, shellTorqueRandom), 0), ForceMode.Impulse);
 		}
-		
+
 		// Play the gunshot sound
 		GetComponent<AudioSource>().PlayOneShot(fireSound);
 	}
-	
+
 	// Beam system
 	void Beam()
 	{
 		// Send a messsage so that users can do other actions whenever this happens
 		SendMessageUpwards("OnEasyWeaponsBeaming", SendMessageOptions.DontRequireReceiver);
-		
+
 		// Set the beaming variable to true
 		beaming = true;
-		
+
 		// Make the beam weapon heat up as it is being used
 		if (!infiniteBeam)
 			beamHeat += Time.deltaTime;
@@ -895,7 +899,7 @@ public class Weapon : MonoBehaviour
 		if (beamGO == null)
 		{
 			beamGO = new GameObject(beamTypeName, typeof(LineRenderer));
-			beamGO.transform.parent = transform;		// Make the beam object a child of the weapon object, so that when the weapon is deactivated the beam will be as well	- was beamGO.transform.SetParent(transform), which only works in Unity 4.6 or newer;
+			beamGO.transform.parent = transform;        // Make the beam object a child of the weapon object, so that when the weapon is deactivated the beam will be as well	- was beamGO.transform.SetParent(transform), which only works in Unity 4.6 or newer;
 		}
 		LineRenderer beamLR = beamGO.GetComponent<LineRenderer>();
 		beamLR.material = beamMaterial;
@@ -923,7 +927,7 @@ public class Weapon : MonoBehaviour
 		// Raycasting (damgage, etc)
 		Ray ray = new Ray(lastPoint, raycastStartSpot.forward);
 		RaycastHit hit;
-		
+
 
 
 		do
@@ -940,7 +944,7 @@ public class Weapon : MonoBehaviour
 				incomingDirection = nextPoint - lastPoint;
 				reflectDirection = Vector3.Reflect(incomingDirection, hit.normal);
 				ray = new Ray(nextPoint, reflectDirection);
-				
+
 				// Update the lastPoint variable
 				lastPoint = hit.point;
 
@@ -991,7 +995,7 @@ public class Weapon : MonoBehaviour
 			}
 			else
 			{
-				
+
 				keepReflecting = false;
 			}
 
@@ -1007,7 +1011,7 @@ public class Weapon : MonoBehaviour
 			beamLR.SetPosition(i, reflectionPoints[i]);
 
 			// Muzzle reflection effects
-			if (makeMuzzleEffects && i > 0)		// Doesn't make the FX on the first iteration since that is handled later.  This is so that the FX at the muzzle point can be parented to the weapon
+			if (makeMuzzleEffects && i > 0)     // Doesn't make the FX on the first iteration since that is handled later.  This is so that the FX at the muzzle point can be parented to the weapon
 			{
 				GameObject muzfx = muzzleEffects[Random.Range(0, muzzleEffects.Length)];
 				if (muzfx != null)
@@ -1035,7 +1039,7 @@ public class Weapon : MonoBehaviour
 			GetComponent<AudioSource>().Play();
 		}
 	}
-	
+
 	public void StopBeam()
 	{
 		// Restart the beam timer
@@ -1043,7 +1047,7 @@ public class Weapon : MonoBehaviour
 		if (beamHeat < 0)
 			beamHeat = 0;
 		GetComponent<AudioSource>().Stop();
-		
+
 		// Remove the visible beam effect GameObject
 		if (beamGO != null)
 		{
@@ -1081,13 +1085,13 @@ public class Weapon : MonoBehaviour
 			return;
 
 		// Make sure the user didn't leave the weapon model field blank
-        if (weaponModel == null)
-        {
-            Debug.Log("Weapon Model is null.  Make sure to set the Weapon Model field in the inspector.");
-            return;
-        }
+		if (weaponModel == null)
+		{
+			Debug.Log("Weapon Model is null.  Make sure to set the Weapon Model field in the inspector.");
+			return;
+		}
 
-        // Calculate random values for the recoil position and rotation
+		// Calculate random values for the recoil position and rotation
 		float kickBack = Random.Range(recoilKickBackMin, recoilKickBackMax);
 		float kickRot = Random.Range(recoilRotationMin, recoilRotationMax);
 
@@ -1096,42 +1100,46 @@ public class Weapon : MonoBehaviour
 		weaponModel.transform.Rotate(new Vector3(-kickRot, 0, 0), Space.Self);
 	}
 
-    // Find a mesh renderer in a specified gameobject, it's children, or its parents
-    MeshRenderer FindMeshRenderer(GameObject go)
-    {
-        MeshRenderer hitMesh;
+	// Find a mesh renderer in a specified gameobject, it's children, or its parents
+	MeshRenderer FindMeshRenderer(GameObject go)
+	{
+		MeshRenderer hitMesh;
 
-        // Use the MeshRenderer directly from this GameObject if it has one
-        if (go.GetComponent<Renderer>() != null)
-        {
-            hitMesh = go.GetComponent<MeshRenderer>();
-        }
+		// Use the MeshRenderer directly from this GameObject if it has one
+		if (go.GetComponent<Renderer>() != null)
+		{
+			hitMesh = go.GetComponent<MeshRenderer>();
+		}
 
-        // Try to find a child or parent GameObject that has a MeshRenderer
-        else
-        {
-            // Look for a renderer in the child GameObjects
-            hitMesh = go.GetComponentInChildren<MeshRenderer>();
+		// Try to find a child or parent GameObject that has a MeshRenderer
+		else
+		{
+			// Look for a renderer in the child GameObjects
+			hitMesh = go.GetComponentInChildren<MeshRenderer>();
 
-            // If a renderer is still not found, try the parent GameObjects
-            if (hitMesh == null)
-            {
-                GameObject curGO = go;
-                while (hitMesh == null && curGO.transform != curGO.transform.root)
-                {
-                    curGO = curGO.transform.parent.gameObject;
-                    hitMesh = curGO.GetComponent<MeshRenderer>();
-                }
-            }
-        }
+			// If a renderer is still not found, try the parent GameObjects
+			if (hitMesh == null)
+			{
+				GameObject curGO = go;
+				while (hitMesh == null && curGO.transform != curGO.transform.root)
+				{
+					curGO = curGO.transform.parent.gameObject;
+					hitMesh = curGO.GetComponent<MeshRenderer>();
+				}
+			}
+		}
 
-        return hitMesh;
-    }
+		return hitMesh;
+	}
 
 	public void OnFire(InputValue inputValue)
-	{ 
+	{
 		isFiring = inputValue.isPressed;
+	}
+
+	public void OnReload(InputValue inputValue)
+	{
+		isReloading = inputValue.isPressed;
     }
 }
-
 

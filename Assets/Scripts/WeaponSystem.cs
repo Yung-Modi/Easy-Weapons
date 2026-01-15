@@ -7,13 +7,13 @@
 
 using UnityEngine;
 using System.Collections;
+using UnityEngine.InputSystem;
 
 public class WeaponSystem : MonoBehaviour
 {
 	public GameObject[] weapons;				// The array that holds all the weapons that the player has
 	public int startingWeaponIndex = 0;			// The weapon index that the player will start with
-	private int weaponIndex;					// The current index of the active weapon
-
+	private int weaponIndex;                    // The current index of the active weapon
 
 	// Use this for initialization
 	void Start()
@@ -95,6 +95,7 @@ public class WeaponSystem : MonoBehaviour
 		SetActiveWeapon(weaponIndex);
 	}
 
+
 	public void PreviousWeapon()
 	{
 		weaponIndex--;
@@ -102,4 +103,14 @@ public class WeaponSystem : MonoBehaviour
 			weaponIndex = weapons.Length - 1;
 		SetActiveWeapon(weaponIndex);
 	}
+
+	public void OnNextWeapon(InputValue inputValue)
+	{
+		    NextWeapon();
+    }
+
+    public void OnPreviousWeapon(InputValue inputValue)
+    {
+        PreviousWeapon();
+    }
 }
