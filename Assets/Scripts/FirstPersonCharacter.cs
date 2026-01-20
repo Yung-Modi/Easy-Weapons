@@ -23,6 +23,7 @@ public class FirstPersonCharacter : MonoBehaviour
     private CapsuleCollider capsule;                                                    // The capsule collider for the first person character
     private const float jumpRayLength = 0.7f;                                           // The length of the ray used for testing against the ground when jumping
     public bool grounded { get; private set; }
+    public Transform pivotPoint;
     private Vector2 input;
     private IComparer rayHitComparer;
     private bool isJumping = false;
@@ -81,7 +82,7 @@ public class FirstPersonCharacter : MonoBehaviour
         if (input.sqrMagnitude > 1) input.Normalize();
 
         // Get a vector which is desired move as a world-relative direction, including speeds
-        Vector3 desiredMove = transform.forward * input.y * speed + transform.right * input.x * strafeSpeed;
+        Vector3 desiredMove = pivotPoint.forward * input.y * speed + pivotPoint.right * input.x * strafeSpeed;
 
         // preserving current y velocity (for falling, gravity)
         float yv = GetComponent<Rigidbody>().linearVelocity.y;
@@ -110,7 +111,7 @@ public class FirstPersonCharacter : MonoBehaviour
         // Ground Check:
 
         // Create a ray that points down from the centre of the character.
-        Ray ray = new Ray(transform.position, -transform.up);
+        Ray ray = new Ray(pivotPoint.position, -transform.up);
 
         // Raycast slightly further than the capsule (as determined by jumpRayLength)
         RaycastHit[] hits = Physics.RaycastAll(ray, capsule.height * jumpRayLength);
