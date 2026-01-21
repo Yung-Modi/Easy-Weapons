@@ -98,7 +98,8 @@ public class Health : MonoBehaviour
 		}
 		else
 		{
-			Destroy(gameObject);
+			GameManager.Instance.EnemyKilled();
+            Destroy(gameObject);
 		}
 	}
 
