@@ -22,18 +22,43 @@ public class Spawner : MonoBehaviour
     [Tooltip("Maximum number of spawned instances allowed at the same time. Set to 0 for unlimited.")]
     public int spawnCap = 20;                       // 0 means no cap (unlimited)
 
+    [Header("Nuke gating")]
+    [Tooltip("If true, this Spawner will wait until a GameObject tagged 'Nuke' dies before spawning.")]
+    public bool requireNukeDeath = true;
+
     private float spawnTimer = 0.0f;
 
     // Track spawned instances so we can enforce the cap
     private readonly List<GameObject> spawnedInstances = new List<GameObject>();
 
+    // Internal flag set when a Nuke has died
+    private bool nukeDied = false;
+
     // Use this for initialization
     void Start()
     {
-        if (spawnOnStart)
+        if (spawnOnStart && (!requireNukeDeath || nukeDied))
         {
             Spawn();
         }
+
+        // Subscribe to Health's Nuke death event if required
+        if (requireNukeDeath)
+        {
+            nukeDied = false;
+            Health.OnNukeDestroyed += HandleNukeDestroyed;
+        }
+        else
+        {
+            nukeDied = true;
+        }
+    }
+
+    void OnDestroy()
+    {
+        // Unsubscribe to avoid leaks
+        if (requireNukeDeath)
+            Health.OnNukeDestroyed -= HandleNukeDestroyed;
     }
 
     // Update is called once per frame
@@ -42,15 +67,18 @@ public class Spawner : MonoBehaviour
         // Clean up any destroyed instances so our count stays accurate
         CleanUpSpawnedInstances();
 
-        // Update the spawning timer
-        spawnTimer += Time.deltaTime;
-
-        // Spawn a prefab if the timer has reached spawnFrequency
-        if (spawnTimer >= spawnFrequency)
+        // Update the spawning timer and spawn only if gating is satisfied
+        if (!requireNukeDeath || nukeDied)
         {
-            // First reset the spawn timer to 0
-            spawnTimer = 0.0f;
-            Spawn();
+            spawnTimer += Time.deltaTime;
+
+            // Spawn a prefab if the timer has reached spawnFrequency
+            if (spawnTimer >= spawnFrequency)
+            {
+                // First reset the spawn timer to 0
+                spawnTimer = 0.0f;
+                Spawn();
+            }
         }
 
         // Move and turn so that boxes don't keep spawning in the same spots
@@ -98,5 +126,14 @@ public class Spawner : MonoBehaviour
     {
         if (spawnedInstances.Count == 0) return;
         spawnedInstances.RemoveAll(item => item == null);
+    }
+
+    // Handler for the global Nuke-death event
+    private void HandleNukeDestroyed()
+    {
+        nukeDied = true;
+        // Optionally spawn immediately when the nuke dies
+        spawnTimer = spawnFrequency;
+        Spawn();
     }
 }
