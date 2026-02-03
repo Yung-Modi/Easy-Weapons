@@ -10,7 +10,7 @@ public class PlayerRespawn : MonoBehaviour
     public int maxRespawns = 3;
 
     [Header("Respawn")]
-    [Tooltip("Where the player will be moved when respawning. If null, player will respawn at this object's starting position.")]
+    [Tooltip("Where the player will be moved when respawning. If null, player will respawn at this object's starting position or the nearest object tagged \"Respawn Point\".")]
     public Transform respawnPoint;
     [Tooltip("Delay before respawn (seconds).")]
     public float respawnDelay = 2f;
@@ -37,16 +37,17 @@ public class PlayerRespawn : MonoBehaviour
 
     public int RemainingRespawns => remainingRespawns;
 
+    // Tag used to search for respawn points in the scene
+    private const string RespawnPointTag = "Respawn Point";
+
     void Awake()
     {
         remainingRespawns = maxRespawns;
         initialPosition = transform.position;
         initialRotation = transform.rotation;
 
-        if (respawnPoint == null)
-        {
-            // keep null — we'll use initialPosition as fallback
-        }
+        // Note: we do not overwrite a user-assigned respawnPoint here.
+        // If respawnPoint is null, DoRespawn() will attempt to find the nearest object tagged "Respawn Point".
     }
 
     /// <summary>
@@ -100,8 +101,9 @@ public class PlayerRespawn : MonoBehaviour
         yield return new WaitForSeconds(Mathf.Max(0f, respawnDelay));
 
         // perform respawn: move and re-enable
-        Vector3 targetPos = respawnPoint != null ? respawnPoint.position : initialPosition;
-        Quaternion targetRot = respawnPoint != null ? respawnPoint.rotation : initialRotation;
+        Transform chosen = GetRespawnTransform();
+        Vector3 targetPos = (chosen != null) ? chosen.position : initialPosition;
+        Quaternion targetRot = (chosen != null) ? chosen.rotation : initialRotation;
 
         transform.position = targetPos;
         transform.rotation = targetRot;
@@ -138,6 +140,53 @@ public class PlayerRespawn : MonoBehaviour
                     g.SetActive(!disabled);
             }
         }
+    }
+
+    /// <summary>
+    /// Returns a Transform to use for respawn.
+    /// Priority:
+    /// 1) The explicit public respawnPoint (if set in Inspector)
+    /// 2) The nearest active GameObject with tag "Respawn Point" (if any)
+    /// 3) Fallback to the initial position recorded on Awake.
+    /// </summary>
+    private Transform GetRespawnTransform()
+    {
+        if (respawnPoint != null)
+            return respawnPoint;
+
+        // Find all objects with the configured tag and pick the nearest one
+        GameObject[] candidates;
+        try
+        {
+            candidates = GameObject.FindGameObjectsWithTag(RespawnPointTag);
+        }
+        catch
+        {
+            // If the tag does not exist in Tag Manager, FindGameObjectsWithTag will throw.
+            // Fall back to no candidates.
+            candidates = null;
+        }
+
+        if (candidates == null || candidates.Length == 0)
+            return null;
+
+        Transform nearest = null;
+        float bestDistSqr = float.PositiveInfinity;
+        Vector3 myPos = transform.position;
+
+        for (int i = 0; i < candidates.Length; i++)
+        {
+            var go = candidates[i];
+            if (go == null || !go.activeInHierarchy) continue;
+            float d = (go.transform.position - myPos).sqrMagnitude;
+            if (d < bestDistSqr)
+            {
+                bestDistSqr = d;
+                nearest = go.transform;
+            }
+        }
+
+        return nearest;
     }
 
     /// <summary>
