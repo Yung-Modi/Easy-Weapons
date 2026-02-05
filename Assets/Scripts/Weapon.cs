@@ -213,8 +213,8 @@ public class Weapon : MonoBehaviour
 	private bool holdingFire = false;                  // Whether or not the fire button is currently being held down (used for warmup weapons)
 
 
-    // Use this for initialization
-    void Start()
+	// Use this for initialization
+	void Start()
 	{
 		// Calculate the actual ROF to be used in the weapon systems.  The rateOfFire variable is
 		// designed to make it easier on the user - it represents the number of rounds to be fired
@@ -369,7 +369,7 @@ public class Weapon : MonoBehaviour
 					{
 						heat += Time.deltaTime;
 						holdingFire = true;
-                    }
+					}
 				}
 				if (warmup && isFiring == false && holdingFire)
 				{
@@ -381,7 +381,7 @@ public class Weapon : MonoBehaviour
 					{
 						Launch();
 						holdingFire = false;
-                    }
+					}
 				}
 			}
 
@@ -1140,6 +1140,22 @@ public class Weapon : MonoBehaviour
 	public void OnReload(InputValue inputValue)
 	{
 		isReloading = inputValue.isPressed;
-    }
+	}
+
+	public void FireInput(bool virtualFireState)
+	{
+		isFiring = true;
+	}
+
+	public void SwitchInput(bool virtualReloadState)
+	{
+		 
+	}
+
+	public void ReloadInput(bool virtualReloadState)
+	{
+		isReloading = true;
+
+	}
 }
 

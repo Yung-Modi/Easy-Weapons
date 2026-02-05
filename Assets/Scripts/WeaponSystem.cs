@@ -113,4 +113,15 @@ public class WeaponSystem : MonoBehaviour
     {
         PreviousWeapon();
     }
+
+	public void SwitchInput(bool virtualSwitchState)
+	{
+		if (virtualSwitchState)
+		{
+			NextWeapon();
+		}
+    }
+
+
+
 }

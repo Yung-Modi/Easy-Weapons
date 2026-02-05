@@ -30,4 +30,9 @@ public class SlowMotion : MonoBehaviour
 	{
         timeSlow = inputValue.isPressed;
     }
+
+	public void SlowMotionInput(bool slowMotionState)
+	{
+		timeSlow = slowMotionState;
+    }
 }

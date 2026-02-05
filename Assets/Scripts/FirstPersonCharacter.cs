@@ -160,9 +160,20 @@ public class FirstPersonCharacter : MonoBehaviour
         vertical = inputVector.y;
     }
 
+    public void MoveInput (Vector2 moveDirection)
+    {
+        horizontal = moveDirection.x;
+        vertical = moveDirection.y;
+    }
+
     public void OnJump(InputValue inputValue)
     {
         isJumping = inputValue.isPressed;
+    }
+
+    public void LookInput(Vector2 lookDirection)
+    {
+        // not used for movement, but can be used by a camera script to rotate the camera
     }
 
     //used for comparing distances
