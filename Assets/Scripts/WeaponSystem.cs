@@ -6,107 +6,76 @@
 /// </summary>
 
 using UnityEngine;
-using System.Collections;
 using UnityEngine.InputSystem;
 
 public class WeaponSystem : MonoBehaviour
 {
-	public GameObject[] weapons;				// The array that holds all the weapons that the player has
-	public int startingWeaponIndex = 0;			// The weapon index that the player will start with
-	private int weaponIndex;                    // The current index of the active weapon
+    public GameObject[] weapons;                // The array that holds all the weapons that the player has
+    public int startingWeaponIndex = 0;         // The weapon index that the player will start with
+    private int weaponIndex;                    // The current index of the active weapon
 
-	// Use this for initialization
-	void Start()
-	{
-		// Make sure the starting active weapon is the one selected by the user in startingWeaponIndex
-		weaponIndex = startingWeaponIndex;
-		SetActiveWeapon(weaponIndex);
-	}
-	
-	// Update is called once per frame
-	void Update()
-	{
-		// Allow the user to instantly switch to any weapon
-		if (Input.GetButtonDown("Weapon 1"))
-			SetActiveWeapon(0);
-		if (Input.GetButtonDown("Weapon 2"))
-			SetActiveWeapon(1);
-		if (Input.GetButtonDown("Weapon 3"))
-			SetActiveWeapon(2);
-		if (Input.GetButtonDown("Weapon 4"))
-			SetActiveWeapon(3);
-		if (Input.GetButtonDown("Weapon 5"))
-			SetActiveWeapon(4);
-		if (Input.GetButtonDown("Weapon 6"))
-			SetActiveWeapon(5);
-		if (Input.GetButtonDown("Weapon 7"))
-			SetActiveWeapon(6);
-		if (Input.GetButtonDown("Weapon 8"))
-			SetActiveWeapon(7);
-		if (Input.GetButtonDown("Weapon 9"))
-			SetActiveWeapon(8);
+    // Use this for initialization
+    void Start()
+    {
+        // Make sure the starting active weapon is the one selected by the user in startingWeaponIndex
+        weaponIndex = startingWeaponIndex;
+        SetActiveWeapon(weaponIndex);
+    }
 
-		// Allow the user to scroll through the weapons
-		if (Input.GetAxis("Mouse ScrollWheel") > 0)
-			NextWeapon();
-		if (Input.GetAxis("Mouse ScrollWheel") < 0)
-			PreviousWeapon();
-	}
-
-	void OnGUI()
-	{
+    void OnGUI()
+    {
 
 
-	}
+    }
 
-	public void SetActiveWeapon(int index)
-	{
-		// Make sure this weapon exists before trying to switch to it
-		if (index >= weapons.Length || index < 0)
-		{
-			Debug.LogWarning("Tried to switch to a weapon that does not exist.  Make sure you have all the correct weapons in your weapons array.");
-			return;
-		}
+    public void SetActiveWeapon(int index)
+    {
+        // Make sure this weapon exists before trying to switch to it
+        if (index >= weapons.Length || index < 0)
+        {
+            Debug.LogWarning("Tried to switch to a weapon that does not exist.  Make sure you have all the correct weapons in your weapons array.");
+            return;
+        }
 
-		// Send a messsage so that users can do other actions whenever this happens
-		SendMessageUpwards("OnEasyWeaponsSwitch", SendMessageOptions.DontRequireReceiver);
+        // Send a messsage so that users can do other actions whenever this happens
+        SendMessageUpwards("OnEasyWeaponsSwitch", SendMessageOptions.DontRequireReceiver);
 
-		// Make sure the weaponIndex references the correct weapon
-		weaponIndex = index;
+        // Make sure the weaponIndex references the correct weapon
+        weaponIndex = index;
 
-		// Make sure beam game objects aren't left over after weapon switching
-		weapons[index].GetComponent<Weapon>().StopBeam();
+        // Make sure beam game objects aren't left over after weapon switching
+        weapons[index].GetComponent<Weapon>().StopBeam();
 
-		// Start be deactivating all weapons
-		for (int i = 0; i < weapons.Length; i++)
-		{
-			weapons[i].SetActive(false);
-		}
+        // Start be deactivating all weapons
+        for (int i = 0; i < weapons.Length; i++)
+        {
+            weapons[i].SetActive(false);
+        }
 
-		// Activate the one weapon that we want
-		weapons[index].SetActive(true);
-	}
+        // Activate the one weapon that we want
+        weapons[index].SetActive(true);
+    }
 
-	public void NextWeapon()
-	{
-		weaponIndex++;
-		if (weaponIndex > weapons.Length - 1)
-			weaponIndex = 0;
-		SetActiveWeapon(weaponIndex);
-	}
+    public void NextWeapon()
+    {
+        weaponIndex++;
+        if (weaponIndex > weapons.Length - 1)
+            weaponIndex = 0;
+        SetActiveWeapon(weaponIndex);
+    }
 
 
-	public void PreviousWeapon()
-	{
-		weaponIndex--;
-		if (weaponIndex < 0)
-			weaponIndex = weapons.Length - 1;
-		SetActiveWeapon(weaponIndex);
-	}
+    public void PreviousWeapon()
+    {
+        weaponIndex--;
+        if (weaponIndex < 0)
+            weaponIndex = weapons.Length - 1;
+        SetActiveWeapon(weaponIndex);
+    }
 
-	public void OnNextWeapon(InputValue inputValue)
-	{
-		    NextWeapon();
+    public void OnNextWeapon(InputValue inputValue)
+    {
+        NextWeapon();
     }
 
     public void OnPreviousWeapon(InputValue inputValue)
@@ -114,14 +83,65 @@ public class WeaponSystem : MonoBehaviour
         PreviousWeapon();
     }
 
-	public void SwitchInput(bool virtualSwitchState)
-	{
-		if (virtualSwitchState)
-		{
-			NextWeapon();
-		}
+    public void SwitchInput(bool virtualSwitchState)
+    {
+        if (virtualSwitchState)
+        {
+            NextWeapon();
+        }
     }
 
+    public void OnWeaponSwap1(InputValue inputValue)
+    {
+        SetActiveWeapon(0);
+    }
 
+    public void OnWeaponSwap2(InputValue inputValue)
+    {
+        SetActiveWeapon(1);
+    }
+
+    public void OnWeaponSwap3(InputValue inputValue)
+    {
+        SetActiveWeapon(2);
+    }
+
+    public void OnWeaponSwap4(InputValue inputValue)
+    {
+        SetActiveWeapon(3);
+    }
+
+    public void OnWeaponSwap5(InputValue inputValue)
+    {
+        SetActiveWeapon(4);
+    }
+
+    public void OnWeaponSwap6(InputValue inputValue)
+    {
+        SetActiveWeapon(5);
+    }
+
+    public void OnWeaponSwap7(InputValue inputValue)
+    {
+        SetActiveWeapon(6);
+    }
+
+    public void OnWeaponSwap8(InputValue inputValue)
+    {
+        SetActiveWeapon(7);
+    }
+
+    public void OnScrollWeapon (InputValue inputValue)
+    {
+        Vector2 scrollValue = inputValue.Get<Vector2>();
+        if (scrollValue.y > 0f)
+        {
+            NextWeapon();
+        }
+        else if (scrollValue.y < 0f)
+        {
+            PreviousWeapon();
+        }
+    }
 
 }

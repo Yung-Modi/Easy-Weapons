@@ -343,7 +343,7 @@ public class Weapon : MonoBehaviour
 				}
 				if (warmup && isFiring == false)
 				{
-					if (allowCancel && Input.GetButton("Cancel"))
+					if (allowCancel /*&& Input.GetButton("Cancel")*/)
 					{
 						heat = 0.0f;
 					}
@@ -373,7 +373,7 @@ public class Weapon : MonoBehaviour
 				}
 				if (warmup && isFiring == false && holdingFire)
 				{
-					if (allowCancel && Input.GetButton("Cancel"))
+					if (allowCancel /*&& Input.GetButton("Cancel")*/)
 					{
 						heat = 0.0f;
 					}
