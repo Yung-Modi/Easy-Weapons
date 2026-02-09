@@ -209,7 +209,7 @@ public class Weapon : MonoBehaviour
 
 	// Other
 	private bool canFire = true;                        // Whether or not the weapon can currently fire (used for semi-auto weapons)
-	private bool isFiring = false;                  // Whether or not the weapon is currently firing (used for automatic weapons)
+	public bool isFiring = false;                  // Whether or not the weapon is currently firing (used for automatic weapons)
 	private bool holdingFire = false;                  // Whether or not the fire button is currently being held down (used for warmup weapons)
 
 
@@ -1134,8 +1134,9 @@ public class Weapon : MonoBehaviour
 
 	public void OnFire(InputValue inputValue)
 	{
-		isFiring = inputValue.isPressed;
-	}
+		//isFiring = inputValue.isPressed;
+		FireInput(inputValue.isPressed);
+    }
 
 	public void OnReload(InputValue inputValue)
 	{
@@ -1144,7 +1145,7 @@ public class Weapon : MonoBehaviour
 
 	public void FireInput(bool virtualFireState)
 	{
-		isFiring = true;
+		isFiring = virtualFireState;
 	}
 
 	public void SwitchInput(bool virtualReloadState)
@@ -1154,7 +1155,7 @@ public class Weapon : MonoBehaviour
 
 	public void ReloadInput(bool virtualReloadState)
 	{
-		isReloading = true;
+		isReloading = virtualReloadState;
 
 	}
 }
