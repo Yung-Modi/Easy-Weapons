@@ -13,7 +13,7 @@ namespace StarterAssets
 
         public void VirtualMoveInput(Vector2 virtualMoveDirection)
         {
-           firstPersonCharacter.MoveInput(virtualMoveDirection);
+            firstPersonCharacter.MoveInput(virtualMoveDirection);
         }
 
         public void VirtualLookInput(Vector2 virtualLookDirection)
@@ -28,21 +28,21 @@ namespace StarterAssets
 
         public void VirtualFireInput(bool virtualFireState)
         {
-            if (pistol != null)
+            if (pistol.gameObject.activeInHierarchy)
                 pistol.FireInput(virtualFireState);
-            if (shotgun != null)
+            if (shotgun.gameObject.activeInHierarchy)
                 shotgun.FireInput(virtualFireState);
-            if (m4 != null)
+            if (m4.gameObject.activeInHierarchy)
                 m4.FireInput(virtualFireState);
-            if (m79Grenadelauncher != null)
+            if (m79Grenadelauncher.gameObject.activeInHierarchy)
                 m79Grenadelauncher.FireInput(virtualFireState);
-            if (beamGun != null)
+            if (beamGun.gameObject.activeInHierarchy)
                 beamGun.FireInput(virtualFireState);
-            if (railGun != null)
+            if (railGun.gameObject.activeInHierarchy)
                 railGun.FireInput(virtualFireState);
-            if (rocketLauncher != null)
+            if (rocketLauncher.gameObject.activeInHierarchy)
                 rocketLauncher.FireInput(virtualFireState);
-            if (clusterBombLauncher != null)
+            if (clusterBombLauncher.gameObject.activeInHierarchy)
                 clusterBombLauncher.FireInput(virtualFireState);
         }
 
@@ -53,21 +53,21 @@ namespace StarterAssets
 
         public void VirtualReloadInput(bool virtualReloadState)
         {
-            if (pistol != null)
+            if (pistol.gameObject.activeInHierarchy)
                 pistol.ReloadInput(virtualReloadState);
-            if (shotgun != null)
+            if (shotgun.gameObject.activeInHierarchy)
                 shotgun.ReloadInput(virtualReloadState);
-            if (m4 != null)
+            if (m4.gameObject.activeInHierarchy)
                 m4.ReloadInput(virtualReloadState);
-            if (m79Grenadelauncher != null)
+            if (m79Grenadelauncher.gameObject.activeInHierarchy)
                 m79Grenadelauncher.ReloadInput(virtualReloadState);
-            if (beamGun != null)
+            if (beamGun.gameObject.activeInHierarchy)
                 beamGun.ReloadInput(virtualReloadState);
-            if (railGun != null)
+            if (railGun.gameObject.activeInHierarchy)
                 railGun.ReloadInput(virtualReloadState);
-            if (rocketLauncher != null)
+            if (rocketLauncher.gameObject.activeInHierarchy)
                 rocketLauncher.ReloadInput(virtualReloadState);
-            if (clusterBombLauncher != null)
+            if (clusterBombLauncher.gameObject.activeInHierarchy)
                 clusterBombLauncher.ReloadInput(virtualReloadState);
         }
 

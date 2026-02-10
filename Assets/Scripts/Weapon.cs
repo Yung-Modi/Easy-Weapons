@@ -1145,7 +1145,8 @@ public class Weapon : MonoBehaviour
 
 	public void FireInput(bool virtualFireState)
 	{
-		isFiring = virtualFireState;
+		if (gameObject.activeInHierarchy)
+            isFiring = virtualFireState;
 	}
 
 	public void SwitchInput(bool virtualReloadState)
@@ -1155,8 +1156,8 @@ public class Weapon : MonoBehaviour
 
 	public void ReloadInput(bool virtualReloadState)
 	{
-		isReloading = virtualReloadState;
-
+        if (gameObject.activeInHierarchy)
+            isReloading = virtualReloadState;
 	}
 }
 
