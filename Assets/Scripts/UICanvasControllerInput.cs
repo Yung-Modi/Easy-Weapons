@@ -10,6 +10,7 @@ namespace StarterAssets
         public FirstPersonCharacter firstPersonCharacter;
         public Weapon pistol, m4, shotgun, m79Grenadelauncher, beamGun, railGun, rocketLauncher, clusterBombLauncher;
         public WeaponSystem weaponSystem;
+        public MouseRotator mouseRotator;
 
         public void VirtualMoveInput(Vector2 virtualMoveDirection)
         {
@@ -18,7 +19,7 @@ namespace StarterAssets
 
         public void VirtualLookInput(Vector2 virtualLookDirection)
         {
-            firstPersonCharacter.LookInput(virtualLookDirection);
+           mouseRotator.LookInput(virtualLookDirection);
         }
 
         public void VirtualSlowMotionInput(bool virtualSlowMotionState)

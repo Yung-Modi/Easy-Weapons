@@ -33,10 +33,18 @@ public class MouseRotator : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		originalRotation = transform.localRotation;
-	}
-	
-	// Update is called once per frame
-	void Update () {
+#if UNITY_IOS || UNITY_ANDROID
+		rotationSpeed = 3f;
+#else
+if (Gamepad.current == null)
+		rotationSpeed = 1.5f;
+	else
+		rotationSpeed = .9f;
+#endif
+    }
+
+    // Update is called once per frame
+    void Update () {
 		
 		// we make initial calculations from the original local rotation
 		transform.localRotation = originalRotation;
@@ -87,6 +95,13 @@ public class MouseRotator : MonoBehaviour {
     {
         horizontalInput = inputValue.Get<Vector2>().normalized.x;
 		verticalInput = inputValue.Get<Vector2>().normalized.y;
+    }
+
+
+    public void LookInput(Vector2 lookDirection)
+    {
+		horizontalInput = lookDirection.normalized.x;
+		verticalInput = lookDirection.normalized.y;
     }
 
 }

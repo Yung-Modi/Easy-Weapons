@@ -157,11 +157,6 @@ public class FirstPersonCharacter : MonoBehaviour
         isJumping = inputValue.isPressed;
     }
 
-    public void LookInput(Vector2 lookDirection)
-    {
-        // not used for movement, but can be used by a camera script to rotate the camera
-    }
-
     //used for comparing distances
     class RayHitComparer : IComparer
     {
