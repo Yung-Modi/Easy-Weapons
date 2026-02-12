@@ -157,6 +157,7 @@ public class FirstPersonCharacter : MonoBehaviour
         isJumping = inputValue.isPressed;
     }
 
+
     //used for comparing distances
     class RayHitComparer : IComparer
     {
