@@ -55,4 +55,22 @@ public class PauseManager : MonoBehaviour
             Debug.Log("Resumed: Crosshair re-enabled for weapon.");
         }
     }
+
+    public void PauseGame()
+    {
+        isPaused = true;
+        Time.timeScale = 0;
+        if (pauseMenu != null)
+        {
+            pauseMenu.SetActive(true);
+        }
+        Cursor.lockState = CursorLockMode.None;
+        foreach (Weapon weapon in weapons)
+        {
+            weapon.isFiring = false;
+            weapon.StopBeam(); // Assuming this method stops any ongoing firing effects
+            weapon.showCrosshair = false; // Hide crosshair when paused
+            Debug.Log("Paused: Crosshair hidden for weapon.");
+        }
+    }
 }

@@ -6,12 +6,13 @@ public class SlowMotion : MonoBehaviour
 {
 	public bool enableSloMo = true;
 	public bool timeSlow = false;
+	public PauseManager pauseManager;
 
 
     // Update is called once per frame
     void Update ()
 	{
-		if (enableSloMo)
+		if (enableSloMo && pauseManager.isPaused == false)
 		{
 			if (timeSlow)
 			{
