@@ -6,7 +6,7 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance; // Singleton pattern for easy access
     public TextMeshProUGUI killCountText; // Assign your UI Text element here in the Inspector
-    private int kills = 0;
+    public int kills = 0;
 
     void Awake()
     {
