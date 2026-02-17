@@ -1,150 +1,96 @@
-using UnityEngine;
 using System.IO;
+using System.Collections;
+using TMPro;
+using UnityEngine;
 
-public class HighscoreManager : MonoBehaviour
+[System.Serializable]
+public class HighScoreData
 {
-    public GameManager gameManager; // Reference to your GameManager, assign in Inspector
-    // Singleton
-    public static HighscoreManager Instance { get; private set; }
+    public int highScore;
+}
 
-    // Session and saved values
-    public int highscoreKills = 0;
+public class HighScoreManager : MonoBehaviour
+{
+    public static HighScoreManager Instance;
 
-    // HUD options
-    public bool showHUD = true;
-    public bool topRight = true;
-    public int guiMargin = 10;
-    public int guiWidth = 220;
-    public int guiHeight = 24;
-    public int fontSize = 18;
-    public Color fontColor = Color.black;
-    public GUIStyle guiStyle;
+    public TextMeshProUGUI highScoreText;
+    public TextMeshProUGUI newHighScoreText; // Optional popup
 
-    private readonly string fileName = "highscore.json";
+    private HighScoreData data = new HighScoreData();
+    private string filePath;
+
+    // coroutine handle so we can restart/stop the timer if another high score occurs
+    private Coroutine hideCoroutine;
 
     void Awake()
     {
-        // Simple singleton
-        if (Instance != null && Instance != this)
-        {
+        if (Instance == null)
+            Instance = this;
+        else
             Destroy(gameObject);
-            return;
-        }
-        Instance = this;
-        DontDestroyOnLoad(gameObject);
+
+        filePath = Application.persistentDataPath + "/highscore.json";
     }
 
     void Start()
     {
-        LoadHighscore();
+        LoadHighScore();
+        UpdateHighScoreUI();
+
+        if (newHighScoreText != null)
+            newHighScoreText.gameObject.SetActive(false);
     }
 
-    // Call this when an enemy is killed.
-    // You can call HighscoreManager.RegisterKill() from your GameManager or Health.Die().
-    public static void RegisterKill()
+    public void CheckForHighScore(int finalKills)
     {
-        if (Instance != null)
-            Instance.AddKill();
-    }
-
-    public void AddKill()
-    {
-        gameManager.kills++;
-        if (gameManager.kills > highscoreKills)
+        if (finalKills > data.highScore)
         {
-            highscoreKills = gameManager.kills;
-            SaveHighscore();
-        }
-    }
+            data.highScore = finalKills;
+            SaveHighScore();
+            UpdateHighScoreUI();
 
-    public void ResetSessionKills()
-    {
-        gameManager.kills = 0;
-    }
+            if (newHighScoreText != null)
+            {
+                newHighScoreText.gameObject.SetActive(true);
 
-    public void ResetHighscore()
-    {
-        highscoreKills = 0;
-        string path = Path.Combine(Application.persistentDataPath, fileName);
-        if (File.Exists(path))
-        {
-            try
-            {
-                File.Delete(path);
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogWarning($"Failed to delete highscore file: {ex.Message}");
+                // restart hide timer
+                if (hideCoroutine != null)
+                    StopCoroutine(hideCoroutine);
+                hideCoroutine = StartCoroutine(HideNewHighScoreCoroutine());
             }
         }
     }
 
-    public void SaveHighscore()
+    void SaveHighScore()
     {
-        string path = Path.Combine(Application.persistentDataPath, fileName);
-        try
+        string json = JsonUtility.ToJson(data, true);
+        File.WriteAllText(filePath, json);
+    }
+
+    void LoadHighScore()
+    {
+        if (File.Exists(filePath))
         {
-            var data = new HighscoreData { highscoreKills = this.highscoreKills };
-            string json = JsonUtility.ToJson(data);
-            File.WriteAllText(path, json);
+            string json = File.ReadAllText(filePath);
+            data = JsonUtility.FromJson<HighScoreData>(json);
         }
-        catch (System.Exception ex)
+        else
         {
-            Debug.LogWarning($"Failed to save highscore to file: {ex.Message}");
+            data.highScore = 0;
         }
     }
 
-    public void LoadHighscore()
+    void UpdateHighScoreUI()
     {
-        string path = Path.Combine(Application.persistentDataPath, fileName);
-        if (!File.Exists(path))
-        {
-            highscoreKills = 0;
-            return;
-        }
-
-        try
-        {
-            string json = File.ReadAllText(path);
-            if (!string.IsNullOrEmpty(json))
-            {
-                var data = JsonUtility.FromJson<HighscoreData>(json);
-                if (data != null)
-                    highscoreKills = data.highscoreKills;
-            }
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogWarning($"Failed to load highscore from file: {ex.Message}");
-            highscoreKills = 0;
-        }
+        if (highScoreText != null)
+            highScoreText.text = "HIGH SCORE: " + data.highScore;
     }
 
-    void OnGUI()
+    private IEnumerator HideNewHighScoreCoroutine()
     {
-        if (!showHUD) return;
-
-        if (guiStyle == null)
-        {
-            guiStyle = new GUIStyle(GUI.skin.label);
-            guiStyle.alignment = TextAnchor.MiddleRight;
-            guiStyle.fontSize = fontSize;
-            guiStyle.normal.textColor = fontColor;
-        }
-
-        string text = $"High: {highscoreKills}";
-
-        float x = Screen.width - guiMargin - guiWidth;
-        float y = topRight ? guiMargin : Screen.height - guiMargin - guiHeight;
-        Rect rect = new Rect(x, y, guiWidth, guiHeight);
-
-        GUI.Label(rect, text, guiStyle);
-    }
-
-    // Simple serializable container for JSON storage
-    [System.Serializable]
-    private class HighscoreData
-    {
-        public int highscoreKills;
+        yield return new WaitForSeconds(5f);
+        if (newHighScoreText != null)
+            newHighScoreText.gameObject.SetActive(false);
+        hideCoroutine = null;
     }
 }

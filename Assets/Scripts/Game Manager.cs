@@ -20,6 +20,8 @@ public class GameManager : MonoBehaviour
     {
         kills++;
         UpdateKillCountUI();
+
+        HighScoreManager.Instance.CheckForHighScore(kills);
     }
 
     void UpdateKillCountUI()
@@ -29,4 +31,10 @@ public class GameManager : MonoBehaviour
             killCountText.text = "ENEMIES KILLED: " + kills;
         }
     }
+
+    public void GameOver()
+    {
+        HighScoreManager.Instance.CheckForHighScore(kills);
+    }
+
 }

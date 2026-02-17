@@ -6,12 +6,8 @@ public class Player : MonoBehaviour
     public static Player Instance { get; private set; }
 
     // Player data
-    public int points = 0;
-    public int coins = 0;
-    public int currentBlaster = 0;
-    public int highestWave = 0;
+    public int kills = 0;
     public string playerName = "PlayerName";
-    public int[] ownedBlasters = new int[] { 1, 0, 0, 0, 0, 0, 0 };
 
     void Awake()
     {

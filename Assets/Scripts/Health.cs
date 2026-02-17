@@ -125,7 +125,24 @@ public class Health : MonoBehaviour
         // Remove this GameObject from the scene
         if (isPlayer)
         {
-            playerRespawn.TryRespawn();
+            // If a PlayerRespawn component exists, try to respawn.
+            // TryRespawn() returns true when a respawn is scheduled; false when no respawns left.
+            bool respawned = true;
+            if (playerRespawn != null)
+            {
+                respawned = playerRespawn.TryRespawn();
+            }
+            else
+            {
+                // No respawn system present -> treat as no respawns left
+                respawned = false;
+            }
+
+            // If we could not respawn the player, notify GameManager of game over.
+            if (!respawned)
+            {
+                GameManager.Instance?.GameOver();
+            }
         }
         else
         {
