@@ -1,5 +1,4 @@
 using System.IO;
-using System.Collections;
 using TMPro;
 using UnityEngine;
 
@@ -14,13 +13,10 @@ public class HighScoreManager : MonoBehaviour
     public static HighScoreManager Instance;
 
     public TextMeshProUGUI highScoreText;
-    public TextMeshProUGUI newHighScoreText; // Optional popup
+    public TextMeshProUGUI newHighScoreText;
 
     private HighScoreData data = new HighScoreData();
     private string filePath;
-
-    // coroutine handle so we can restart/stop the timer if another high score occurs
-    private Coroutine hideCoroutine;
 
     void Awake()
     {
@@ -50,14 +46,7 @@ public class HighScoreManager : MonoBehaviour
             UpdateHighScoreUI();
 
             if (newHighScoreText != null)
-            {
                 newHighScoreText.gameObject.SetActive(true);
-
-                // restart hide timer
-                if (hideCoroutine != null)
-                    StopCoroutine(hideCoroutine);
-                hideCoroutine = StartCoroutine(HideNewHighScoreCoroutine());
-            }
         }
     }
 
@@ -86,11 +75,19 @@ public class HighScoreManager : MonoBehaviour
             highScoreText.text = "HIGH SCORE: " + data.highScore;
     }
 
-    private IEnumerator HideNewHighScoreCoroutine()
+    public void DeleteHighScore()
     {
-        yield return new WaitForSeconds(5f);
+        if (File.Exists(filePath))
+        {
+            File.Delete(filePath);
+        }
+
+        data.highScore = 0;
+        UpdateHighScoreUI();
+
         if (newHighScoreText != null)
             newHighScoreText.gameObject.SetActive(false);
-        hideCoroutine = null;
+
+        Debug.Log("High score data deleted.");
     }
 }
