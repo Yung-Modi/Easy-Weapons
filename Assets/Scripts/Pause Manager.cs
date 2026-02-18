@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 public class PauseManager : MonoBehaviour
@@ -6,6 +7,7 @@ public class PauseManager : MonoBehaviour
     public bool isPaused = false;
     public GameObject pauseMenu;
     public Weapon[] weapons; // Reference to the player's weapons
+    public GameObject resumeButton; // Reference to the Resume button in the pause menu
 
     public void OnPause(InputValue inputValue)
     {
@@ -15,6 +17,7 @@ public class PauseManager : MonoBehaviour
         if (pauseMenu != null)
         {
             pauseMenu.SetActive(isPaused);
+            EventSystem.current.SetSelectedGameObject(resumeButton); // Set focus to Resume button when paused
         }
 
         if (isPaused)
@@ -63,6 +66,7 @@ public class PauseManager : MonoBehaviour
         if (pauseMenu != null)
         {
             pauseMenu.SetActive(true);
+            EventSystem.current.SetSelectedGameObject(resumeButton); // Set focus to Resume button when paused
         }
         Cursor.lockState = CursorLockMode.None;
         foreach (Weapon weapon in weapons)
