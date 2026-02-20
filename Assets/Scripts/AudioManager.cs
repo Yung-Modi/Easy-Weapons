@@ -19,19 +19,18 @@ public class AudioManager : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
 
-        // Load saved volume
-        float savedVolume = PlayerPrefs.GetFloat("MasterVolume", 1f);
-        SetVolume(savedVolume);
     }
 
-    public void SetVolume(float volume)
+    // Set any exposed mixer parameter
+    public void SetVolume(string parameter, float volume)
     {
-        mixer.SetFloat("MasterVolume", Mathf.Log10(volume) * 20);
-        PlayerPrefs.SetFloat("MasterVolume", volume);
+        mixer.SetFloat(parameter, volume);
+        PlayerPrefs.SetFloat(parameter, volume);
     }
 
-    public float GetSavedVolume()
+    // Get saved value for any parameter
+    public float GetSavedVolume(string parameter, float defaultValue = 1f)
     {
-        return PlayerPrefs.GetFloat("MasterVolume", 1f);
+        return PlayerPrefs.GetFloat(parameter, defaultValue);
     }
 }

@@ -3,19 +3,17 @@ using UnityEngine.UI;
 
 public class VolumeSliderUI : MonoBehaviour
 {
-    public Slider volumeSlider;
+    public Slider slider;
+    public string mixerParameter; // Example: MusicVolume
 
     private void Start()
     {
-        // Set slider to saved value
-        volumeSlider.value = AudioManager.Instance.GetSavedVolume();
-
-        // Listen for changes
-        volumeSlider.onValueChanged.AddListener(ChangeVolume);
+        slider.value = AudioManager.Instance.GetSavedVolume(mixerParameter);
+        slider.onValueChanged.AddListener(ChangeVolume);
     }
 
-    public void ChangeVolume(float value)
+    private void ChangeVolume(float value)
     {
-        AudioManager.Instance.SetVolume(value);
+        AudioManager.Instance.SetVolume(mixerParameter, value);
     }
 }
