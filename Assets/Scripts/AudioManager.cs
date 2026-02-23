@@ -3,7 +3,7 @@ using UnityEngine.Audio;
 
 public class AudioManager : MonoBehaviour
 {
-    public static AudioManager Instance;
+    public static AudioManager Instance { get; private set; }
 
     public AudioMixer mixer;
 
@@ -13,11 +13,14 @@ public class AudioManager : MonoBehaviour
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
-            return;
+        }
+        else
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
         }
 
-        Instance = this;
-        DontDestroyOnLoad(gameObject);
+            
 
     }
 
