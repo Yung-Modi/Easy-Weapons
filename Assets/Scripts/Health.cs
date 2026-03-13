@@ -119,9 +119,6 @@ public class Health : MonoBehaviour
         if (OnHealthChanged != null)
             OnHealthChanged(0f, maxHealth);
 
-        if (isPlayer && deathCam != null)
-            deathCam.SetActive(true);
-
         // Remove this GameObject from the scene
         if (isPlayer)
         {

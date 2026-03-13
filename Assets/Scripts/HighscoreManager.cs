@@ -2,12 +2,6 @@ using System.IO;
 using TMPro;
 using UnityEngine;
 
-[System.Serializable]
-public class HighScoreData
-{
-    public int highScore;
-}
-
 public class HighScoreManager : MonoBehaviour
 {
     public static HighScoreManager Instance;

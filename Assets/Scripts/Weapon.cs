@@ -642,11 +642,6 @@ public class Weapon : MonoBehaviour
                 // Damage
                 hit.collider.gameObject.SendMessageUpwards("ChangeHealth", -damage, SendMessageOptions.DontRequireReceiver);
 
-                if (shooterAIEnabled)
-                {
-                    hit.transform.SendMessageUpwards("Damage", damage / 100, SendMessageOptions.DontRequireReceiver);
-                }
-
                 if (bloodyMessEnabled)
                 {
                     //call the ApplyDamage() function on the enenmy CharacterSetup script
@@ -981,12 +976,6 @@ public class Weapon : MonoBehaviour
 
                 // Damage
                 hit.collider.gameObject.SendMessageUpwards("ChangeHealth", -beamPower, SendMessageOptions.DontRequireReceiver);
-
-                // Shooter AI support
-                if (shooterAIEnabled)
-                {
-                    hit.transform.SendMessageUpwards("Damage", beamPower / 100, SendMessageOptions.DontRequireReceiver);
-                }
 
                 // Bloody Mess support
                 if (bloodyMessEnabled)
