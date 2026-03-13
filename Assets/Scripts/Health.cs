@@ -107,6 +107,7 @@ public class Health : MonoBehaviour
         if (CompareTag("Nuke"))
         {
             OnNukeDestroyed?.Invoke();
+            Debug.Log("Nuke destroyed, OnNukeDestroyed event invoked.");
         }
 
         // Make death effects
@@ -114,6 +115,7 @@ public class Health : MonoBehaviour
             Instantiate(deadReplacement, transform.position, transform.rotation);
         if (makeExplosion)
             Instantiate(explosion, transform.position, transform.rotation);
+        Debug.Log(gameObject.name + " has died.");
 
         // ensure listeners see zero before destroy
         if (OnHealthChanged != null)
@@ -128,23 +130,27 @@ public class Health : MonoBehaviour
             if (playerRespawn != null)
             {
                 respawned = playerRespawn.TryRespawn();
+                Debug.Log("Player died. Respawn attempted: " + respawned);
             }
             else
             {
                 // No respawn system present -> treat as no respawns left
                 respawned = false;
+                Debug.LogWarning("Player died but no PlayerRespawn component found. Game over.");
             }
 
             // If we could not respawn the player, notify GameManager of game over.
             if (!respawned)
             {
                 GameManager.Instance?.GameOver();
+                Debug.Log("Game over. Notifying GameManager.");
             }
         }
         else
         {
             GameManager.Instance.EnemyKilled();
             Destroy(gameObject);
+            Debug.Log(gameObject.name + " destroyed and GameManager notified of enemy kill.");
         }
     }
 
