@@ -1,10 +1,4 @@
-﻿/// <summary>
-/// Spawner.cs
-/// Author: MutantGopher
-/// This is a sample spawning script used to spawn the red cubes in the demo scene.
-/// </summary>
-
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -88,6 +82,7 @@ public class Spawner : MonoBehaviour
 
     void Spawn()
     {
+        Debug.Log("Spawner: Spawn() called. Current spawned count: " + spawnedInstances.Count);
         // Validate prefab and spawn points
         if (prefabToSpawn == null || spawnPoints == null || spawnPoints.Length == 0)
             return;
@@ -132,8 +127,6 @@ public class Spawner : MonoBehaviour
     private void HandleNukeDestroyed()
     {
         nukeDied = true;
-        // Optionally spawn immediately when the nuke dies
-        spawnTimer = spawnFrequency;
         Spawn();
     }
 }

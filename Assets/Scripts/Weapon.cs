@@ -1,6 +1,5 @@
 ﻿/// <summary>
 /// Weapon.cs
-/// Author: MutantGopher
 /// This is the core script that is used to create weapons.  There are 3 basic
 /// types of weapons that can be made with this script:
 /// 
