@@ -10,9 +10,5 @@ public class SceneLoader : MonoBehaviour
     }
 
     // Optional: Function to load the next scene in the build order
-    public void LoadNextScene()
-    {
-        int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
-        SceneManager.LoadScene(currentSceneIndex + 1);
-    }
+   
 }

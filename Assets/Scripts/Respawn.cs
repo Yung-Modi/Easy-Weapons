@@ -66,7 +66,7 @@ public class PlayerRespawn : MonoBehaviour
                 Destroy(gameObject);
 
             // Send player back to scene 0
-            SceneManager.LoadScene(0);
+            SceneManager.LoadScene(2);
             return false;
         }
 
@@ -80,8 +80,8 @@ public class PlayerRespawn : MonoBehaviour
             if (destroyOnNoRespawns)
                 Destroy(gameObject);
 
-            // Send player back to scene 0
-            SceneManager.LoadScene(0);
+            // Send player back to the scene # set
+            SceneManager.LoadScene(2);
             return false;
         }
 
