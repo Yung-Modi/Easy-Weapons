@@ -13,7 +13,7 @@ public class PlayerRespawn : MonoBehaviour
     [Tooltip("Where the player will be moved when respawning. If null, player will respawn at this object's starting position or the nearest object tagged \"Respawn Point\".")]
     public Transform respawnPoint;
     [Tooltip("Delay before respawn (seconds).")]
-    public float respawnDelay = 2f;
+    public float respawnDelay = 0f;
 
     [Header("What to disable on death")]
     [Tooltip("Behaviour components to disable while 'dead' (e.g. PlayerController).")]
@@ -24,12 +24,6 @@ public class PlayerRespawn : MonoBehaviour
     [Header("Behavior on out of lives")]
     [Tooltip("If true the GameObject will be destroyed when out of respawns.")]
     public bool destroyOnNoRespawns = false;
-
-    [Header("Control automatic return to menu")]
-    [Tooltip("If true the system will automatically load the configured scene index when out of respawns. Otherwise fire the OnOutOfRespawns event only.")]
-    public bool autoLoadSceneOnNoRespawns = false;
-    [Tooltip("Scene index to load when autoLoadSceneOnNoRespawns is true.")]
-    public int sceneIndexToLoadOnNoRespawns = 2;
 
     [Header("Events")]
     public UnityEvent OnRespawnScheduled;
@@ -51,11 +45,14 @@ public class PlayerRespawn : MonoBehaviour
         remainingRespawns = maxRespawns;
         initialPosition = transform.position;
         initialRotation = transform.rotation;
+
+        // Note: we do not overwrite a user-assigned respawnPoint here.
+        // If respawnPoint is null, DoRespawn() will attempt to find the nearest object tagged "Respawn Point".
     }
 
     /// <summary>
     /// Call this from your death handler. Returns true if a respawn was scheduled; false if there are no respawns left.
-    /// When out of respawns behavior: fire OnOutOfRespawns and, if autoLoadSceneOnNoRespawns is true, load the configured scene index.
+    /// If the last allowed respawn is consumed (player died maxRespawns times), scene 0 will be loaded.
     /// </summary>
     public bool TryRespawn()
     {
@@ -68,34 +65,22 @@ public class PlayerRespawn : MonoBehaviour
             if (destroyOnNoRespawns)
                 Destroy(gameObject);
 
-            // Do not force a scene change by default; only load if explicitly enabled
-            if (autoLoadSceneOnNoRespawns)
-            {
-                // Only load if not already in target scene
-                if (SceneManager.GetActiveScene().buildIndex != sceneIndexToLoadOnNoRespawns)
-                    SceneManager.LoadScene(sceneIndexToLoadOnNoRespawns);
-            }
-
+            SceneManager.LoadScene(2);
             return false;
         }
 
         // consume one respawn
         remainingRespawns--;
 
-        // If this consumption used the last respawn, fire OutOfRespawns and optionally auto-load
+        // If this consumption used the last respawn, go to scene 0 instead of scheduling another respawn
         if (remainingRespawns <= 0)
         {
             OnOutOfRespawns?.Invoke();
             if (destroyOnNoRespawns)
                 Destroy(gameObject);
 
-            if (autoLoadSceneOnNoRespawns)
-            {
-                if (SceneManager.GetActiveScene().buildIndex != sceneIndexToLoadOnNoRespawns)
-                    SceneManager.LoadScene(sceneIndexToLoadOnNoRespawns);
-                return false;
-            }
-
+            // Send player back to the scene # set
+            SceneManager.LoadScene(2);
             return false;
         }
 
@@ -156,11 +141,19 @@ public class PlayerRespawn : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Returns a Transform to use for respawn.
+    /// Priority:
+    /// 1) The explicit public respawnPoint (if set in Inspector)
+    /// 2) The nearest active GameObject with tag "Respawn Point" (if any)
+    /// 3) Fallback to the initial position recorded on Awake.
+    /// </summary>
     private Transform GetRespawnTransform()
     {
         if (respawnPoint != null)
             return respawnPoint;
 
+        // Find all objects with the configured tag and pick the nearest one
         GameObject[] candidates;
         try
         {
@@ -168,6 +161,8 @@ public class PlayerRespawn : MonoBehaviour
         }
         catch
         {
+            // If the tag does not exist in Tag Manager, FindGameObjectsWithTag will throw.
+            // Fall back to no candidates.
             candidates = null;
         }
 
@@ -193,6 +188,9 @@ public class PlayerRespawn : MonoBehaviour
         return nearest;
     }
 
+    /// <summary>
+    /// Resets remaining respawns back to maxRespawns.
+    /// </summary>
     public void ResetLives()
     {
         remainingRespawns = maxRespawns;
