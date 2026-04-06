@@ -72,7 +72,7 @@ public class PlayerRespawn : MonoBehaviour
         // consume one respawn
         remainingRespawns--;
 
-        // If this consumption used the last respawn, go to scene 0 instead of scheduling another respawn
+        // If this consumption used the last respawn, go to the set scene (e.g. Game Over) instead of scheduling another respawn
         if (remainingRespawns <= 0)
         {
             OnOutOfRespawns?.Invoke();
