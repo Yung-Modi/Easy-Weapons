@@ -58,17 +58,6 @@ public class PlayerRespawn : MonoBehaviour
     {
         if (isDead) return false; // already handling a death
 
-        if (remainingRespawns <= 0)
-        {
-            // Already out of respawns
-            OnOutOfRespawns?.Invoke();
-            if (destroyOnNoRespawns)
-                Destroy(gameObject);
-
-            SceneManager.LoadScene(2);
-            return false;
-        }
-
         // consume one respawn
         remainingRespawns--;
 
