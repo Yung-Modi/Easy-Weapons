@@ -29,6 +29,21 @@ public class EnemyAI : MonoBehaviour
 
     public LayerMask obstructionMask; // set to layers that block sight (walls, environment)
 
+    // Spider lunge configuration
+    [Header("Spider Lunge")]
+    [Tooltip("Enable to allow this enemy to perform a lunge attack like a spider.")]
+    public bool isSpider = false;
+    [Tooltip("Maximum distance at which the spider will attempt a lunge.")]
+    public float lungeRange = 6f;
+    [Tooltip("Speed multiplier used during the lunge movement (fallback if NavMesh not used).")]
+    public float lungeSpeed = 12f;
+    [Tooltip("Cooldown between lunges.")]
+    public float lungeCooldown = 2.0f;
+    [Tooltip("Vertical arc height (world units) applied at the apex of the lunge. Set to 0 for a flat lunge.")]
+    public float lungeHeight = 1.0f;
+    [Tooltip("Maximum time (seconds) allowed for a lunge to avoid infinite lunges if ground isn't detected.")]
+    public float lungeMaxTime = 3f;
+
     private NavMeshAgent agent;
     private Transform player;
     private int currentPatrolIndex;
@@ -36,6 +51,10 @@ public class EnemyAI : MonoBehaviour
 
     private bool isScanning;
     private Coroutine scanRoutine;
+
+    // Lunge state
+    private float lastLungeTime = -Mathf.Infinity;
+    private Coroutine lungeRoutine;
 
     // Active enemies registry for fast neighbor checks
     private static readonly List<EnemyAI> allEnemies = new List<EnemyAI>();
@@ -89,15 +108,32 @@ public class EnemyAI : MonoBehaviour
         // If player is in attack range -> attack
         if (distanceToPlayer <= attackRange && CanSeePlayer())
         {
-            // stop any scanning
+            // stop any scanning and any lunge in progress
             StopScanning();
+            if (lungeRoutine != null)
+            {
+                StopCoroutine(lungeRoutine);
+                lungeRoutine = null;
+            }
             Attack();
         }
-        // If player visible and within chase range -> chase
+        // If player visible and within chase range -> chase or lunge (spider)
         else if (distanceToPlayer <= chaseRange && CanSeePlayer())
         {
             StopScanning();
-            Chase();
+
+            // Spider lunge: only if configured, off cooldown, and within lungeRange (but not already in melee)
+            if (isSpider && Time.time - lastLungeTime >= lungeCooldown && distanceToPlayer <= lungeRange && distanceToPlayer > attackRange)
+            {
+                if (lungeRoutine == null)
+                    lungeRoutine = StartCoroutine(LungeTowardsPlayer());
+            }
+            else
+            {
+                // If currently lunging, don't override; otherwise normal chase
+                if (lungeRoutine == null)
+                    Chase();
+            }
         }
         else
         {
@@ -202,6 +238,98 @@ public class EnemyAI : MonoBehaviour
 
             lastAttackTime = Time.time;
         }
+    }
+
+    // Lunge coroutine used by spider enemies
+    private IEnumerator LungeTowardsPlayer()
+    {
+        lastLungeTime = Time.time;
+
+        // Stop the NavMeshAgent while lunging
+        if (agent != null)
+            agent.isStopped = true;
+
+        Vector3 lungeStart = transform.position;
+        Vector3 lungeTarget = player != null ? player.position : lungeStart;
+        bool appliedDamage = false;
+
+        // horizontal-only target for consistent travel (use player's xz at start)
+        Vector3 targetXZ = new Vector3(lungeTarget.x, 0f, lungeTarget.z);
+        Vector3 startXZ = new Vector3(lungeStart.x, 0f, lungeStart.z);
+        float totalHorizontalDist = Vector3.Distance(startXZ, targetXZ);
+        float traveled = 0f;
+
+        float elapsed = 0f;
+        float timeout = lungeMaxTime;
+        while (elapsed < timeout)
+        {
+            if (player == null) break;
+
+            // compute horizontal step
+            Vector3 currentXZ = new Vector3(transform.position.x, 0f, transform.position.z);
+            float step = lungeSpeed * Time.deltaTime;
+            Vector3 nextXZ = (totalHorizontalDist > 0f)
+                ? Vector3.MoveTowards(currentXZ, targetXZ, step)
+                : currentXZ;
+
+            traveled = Vector3.Distance(startXZ, nextXZ);
+            float progress = (totalHorizontalDist > 0f) ? Mathf.Clamp01(traveled / totalHorizontalDist) : 1f;
+
+            // base horizontal position along line
+            Vector3 basePos = Vector3.Lerp(lungeStart, new Vector3(lungeTarget.x, lungeStart.y, lungeTarget.z), progress);
+
+            // Parabolic height offset (peak at progress=0.5)
+            float heightOffset = 4f * lungeHeight * progress * (1f - progress);
+
+            // Next desired position including vertical arc
+            Vector3 nextPos = new Vector3(nextXZ.x, basePos.y + heightOffset, nextXZ.z);
+
+            transform.position = nextPos;
+
+            // Face movement direction (horizontal only)
+            Vector3 lookDir = (new Vector3(player.position.x, transform.position.y, player.position.z) - transform.position);
+            lookDir.y = 0f;
+            if (lookDir.sqrMagnitude > 0.001f)
+                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(lookDir.normalized), 0.5f);
+
+            // Apply damage once if we enter attack range during the lunge (horizontal distance)
+            Vector2 horizPos = new Vector2(transform.position.x, transform.position.z);
+            Vector2 horizPlayer = new Vector2(player.position.x, player.position.z);
+            if (!appliedDamage && Vector2.Distance(horizPos, horizPlayer) <= attackRange)
+            {
+                var healthComp = player.GetComponent<Health>();
+                if (healthComp != null)
+                    healthComp.ChangeHealth(-attackDamage);
+                else
+                    player.SendMessageUpwards("ChangeHealth", -attackDamage, SendMessageOptions.DontRequireReceiver);
+
+                appliedDamage = true;
+                lastAttackTime = Time.time;
+            }
+
+            // Ground check: cast a short ray downward to see if we are touching ground
+            Ray ray = new Ray(transform.position + Vector3.up * 0.1f, Vector3.down);
+            if (Physics.Raycast(ray, out RaycastHit hitInfo, 0.25f))
+            {
+                // Consider we've landed if the ground is below and we have progressed a small amount
+                if (progress > 0.05f)
+                {
+                    break;
+                }
+            }
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        // Resume NavMeshAgent behavior
+        if (agent != null)
+        {
+            agent.isStopped = false;
+            agent.SetDestination(player != null ? player.position : transform.position);
+        }
+
+        lungeRoutine = null;
     }
 
     bool CanSeePlayer()

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 public class Spawner : MonoBehaviour
 {
     public GameObject prefabToSpawn;                // The prefab that should be spawned
+    public GameObject[] prefabsToSpawn;             // Optional: multiple prefabs to choose from (if set, used instead of prefabToSpawn)
     public float spawnFrequency = 6.0f;             // The time (in seconds) between spawns
     public bool spawnOnStart = false;               // Whether or not one instance of the prefab should be spawned on Start()
     public bool move = true;                        // Move this spawn spot around
@@ -20,7 +21,18 @@ public class Spawner : MonoBehaviour
     [Tooltip("If true, this Spawner will wait until a GameObject tagged 'Nuke' dies before spawning.")]
     public bool requireNukeDeath = true;
 
+    // Spider-specific occasional spawn
+    [Header("Occasional Spider Spawns")]
+    [Tooltip("Prefab to use for occasional spider spawns (assign a prefab, optional).")]
+    public GameObject spiderPrefab;
+    [Tooltip("Interval (seconds) between spider spawn roll checks.")]
+    public float spiderSpawnInterval = 20f;
+    [Tooltip("Chance (0..1) that a spider will spawn when the spider timer elapses.")]
+    [Range(0f, 1f)]
+    public float spiderSpawnChance = 0.25f;
+
     private float spawnTimer = 0.0f;
+    private float spiderTimer = 0.0f;
 
     // Track spawned instances so we can enforce the cap
     private readonly List<GameObject> spawnedInstances = new List<GameObject>();
@@ -46,6 +58,9 @@ public class Spawner : MonoBehaviour
         {
             nukeDied = true;
         }
+
+        // initialize spider timer so first check happens after interval
+        spiderTimer = spiderSpawnInterval;
     }
 
     void OnDestroy()
@@ -75,6 +90,17 @@ public class Spawner : MonoBehaviour
             }
         }
 
+        // Spider occasional spawn handling (independent of regular waves)
+        if (spiderPrefab != null && spawnPoints != null && spawnPoints.Length > 0)
+        {
+            spiderTimer += Time.deltaTime;
+            if (spiderTimer >= spiderSpawnInterval)
+            {
+                spiderTimer = 0f;
+                TrySpawnSpider();
+            }
+        }
+
         // Move and turn so that boxes don't keep spawning in the same spots
         transform.Translate(0, 0, moveAmount);
         transform.Rotate(0, turnAmount, 0);
@@ -83,8 +109,9 @@ public class Spawner : MonoBehaviour
     void Spawn()
     {
         Debug.Log("Spawner: Spawn() called. Current spawned count: " + spawnedInstances.Count);
-        // Validate prefab and spawn points
-        if (prefabToSpawn == null || spawnPoints == null || spawnPoints.Length == 0)
+        // Validate prefab(s) and spawn points
+        bool hasAnyPrefab = prefabToSpawn != null || (prefabsToSpawn != null && prefabsToSpawn.Length > 0);
+        if (!hasAnyPrefab || spawnPoints == null || spawnPoints.Length == 0)
             return;
 
         // Clean up destroyed references before calculating cap
@@ -109,10 +136,57 @@ public class Spawner : MonoBehaviour
             int spawnIndex = available[pickIndex];
             available.RemoveAt(pickIndex);
 
+            // Choose which prefab to instantiate
+            GameObject chosenPrefab = prefabToSpawn;
+            if (prefabsToSpawn != null && prefabsToSpawn.Length > 0)
+            {
+                chosenPrefab = prefabsToSpawn[Random.Range(0, prefabsToSpawn.Length)];
+            }
+
+            if (chosenPrefab == null) continue;
+
             // Instantiate at the spawn point position and rotation
-            GameObject go = Instantiate(prefabToSpawn, spawnPoints[spawnIndex].position, spawnPoints[spawnIndex].rotation);
+            GameObject go = Instantiate(chosenPrefab, spawnPoints[spawnIndex].position, spawnPoints[spawnIndex].rotation);
             // Track the spawned instance for cap enforcement
             spawnedInstances.Add(go);
+        }
+    }
+
+    // Try to spawn a spider occasionally according to chance and cap
+    private void TrySpawnSpider()
+    {
+        // Clean up destroyed references first
+        CleanUpSpawnedInstances();
+
+        // Check cap
+        int availableByCap = (spawnCap <= 0) ? int.MaxValue : Mathf.Max(0, spawnCap - spawnedInstances.Count);
+        if (availableByCap <= 0)
+        {
+            Debug.Log("Spawner: spider spawn skipped due to cap.");
+            return;
+        }
+
+        // Roll chance
+        if (Random.value <= spiderSpawnChance)
+        {
+            // pick a random spawn point
+            int idx = Random.Range(0, spawnPoints.Length);
+            Vector3 pos = spawnPoints[idx].position;
+            Quaternion rot = spawnPoints[idx].rotation;
+
+            GameObject go = Instantiate(spiderPrefab, pos, rot);
+            // ensure the spawned object has the Spider tag (override only if tag exists)
+            try
+            {
+                go.tag = "Spider";
+            }
+            catch
+            {
+                // ignore if tag doesn't exist or cannot be set
+            }
+
+            spawnedInstances.Add(go);
+            Debug.Log("Spawner: Spider spawned at index " + idx + ". Total spawned: " + spawnedInstances.Count);
         }
     }
 
