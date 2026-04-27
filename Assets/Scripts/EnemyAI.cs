@@ -29,6 +29,17 @@ public class EnemyAI : MonoBehaviour
 
     public LayerMask obstructionMask; // set to layers that block sight (walls, environment)
 
+    // Wander configuration (will be used when no patrolPoints are assigned)
+    [Header("Wander Settings")]
+    [Tooltip("When true and no `patrolPoints` are provided, the enemy will wander across the terrain instead of using patrol points.")]
+    public bool wanderEntireTerrain = true;
+    [Tooltip("Radius (meters) used when picking a random wander target around the enemy if no terrain exists.")]
+    public float wanderRadius = 30f;
+    [Tooltip("Time (seconds) between selecting new wander destinations.")]
+    public float wanderInterval = 5f;
+    private float wanderTimer = 0f;
+    private Vector3 currentWanderTarget;
+
     // Spider lunge configuration
     [Header("Spider Lunge")]
     [Tooltip("Enable to allow this enemy to perform a lunge attack like a spider.")]
@@ -44,6 +55,13 @@ public class EnemyAI : MonoBehaviour
     [Tooltip("Maximum time (seconds) allowed for a lunge to avoid infinite lunges if ground isn't detected.")]
     public float lungeMaxTime = 3f;
 
+    // Jane Juliet beam attack configuration
+    [Header("Jane Juliet - Beam Attack")]
+    [Tooltip("If this enemy GameObject uses the tag 'jane juliet', it can perform a beam attack using Weapon.cs.")]
+    public float beamRange = 15f;              // max distance to use beam
+    public float beamDuration = 3f;            // how long beam fires
+    public float beamCooldown = 8f;            // cooldown between beam uses
+
     private NavMeshAgent agent;
     private Transform player;
     private int currentPatrolIndex;
@@ -55,6 +73,11 @@ public class EnemyAI : MonoBehaviour
     // Lunge state
     private float lastLungeTime = -Mathf.Infinity;
     private Coroutine lungeRoutine;
+
+    // Beam state
+    private float lastBeamTime = -Mathf.Infinity;
+    private Coroutine beamRoutine;
+    private Weapon weapon; // optional Weapon component on the enemy
 
     // Active enemies registry for fast neighbor checks
     private static readonly List<EnemyAI> allEnemies = new List<EnemyAI>();
@@ -72,6 +95,7 @@ public class EnemyAI : MonoBehaviour
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
+        weapon = GetComponent<Weapon>();
 
         // Randomize avoidance priority so agents don't get stuck fighting for the same space
         if (agent != null)
@@ -97,6 +121,11 @@ public class EnemyAI : MonoBehaviour
         currentPatrolIndex = 0;
         lastAttackTime = -attackCooldown; // Allow immediate attack
         Patrol();
+
+        if (isSpider && agent != null)
+        {
+            // optional spider agent tuning
+        }
     }
 
     void Update()
@@ -105,15 +134,35 @@ public class EnemyAI : MonoBehaviour
 
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
 
+        // If this enemy is "jane juliet" and holds a Weapon (beam-capable), try beam attack first (mid/long range)
+        if (CompareTag("jane juliet") && weapon != null && weapon.type == WeaponType.Beam)
+        {
+            if (distanceToPlayer <= beamRange && CanSeePlayer() && Time.time - lastBeamTime >= beamCooldown && beamRoutine == null && distanceToPlayer > attackRange)
+            {
+                beamRoutine = StartCoroutine(PerformBeamAttack());
+                // prefer beam over other actions while beam is active
+            }
+        }
+
         // If player is in attack range -> attack
         if (distanceToPlayer <= attackRange && CanSeePlayer())
         {
-            // stop any scanning and any lunge in progress
+            // stop any scanning and any lunge/beam in progress
             StopScanning();
             if (lungeRoutine != null)
             {
                 StopCoroutine(lungeRoutine);
                 lungeRoutine = null;
+            }
+            if (beamRoutine != null)
+            {
+                StopCoroutine(beamRoutine);
+                beamRoutine = null;
+                if (weapon != null)
+                {
+                    weapon.isFiring = false;
+                    weapon.StopBeam();
+                }
             }
             Attack();
         }
@@ -122,17 +171,25 @@ public class EnemyAI : MonoBehaviour
         {
             StopScanning();
 
-            // Spider lunge: only if configured, off cooldown, and within lungeRange (but not already in melee)
-            if (isSpider && Time.time - lastLungeTime >= lungeCooldown && distanceToPlayer <= lungeRange && distanceToPlayer > attackRange)
+            // If currently beam-attacking, skip chase/lunge
+            if (beamRoutine != null)
             {
-                if (lungeRoutine == null)
-                    lungeRoutine = StartCoroutine(LungeTowardsPlayer());
+                // do nothing while beam is active
             }
             else
             {
-                // If currently lunging, don't override; otherwise normal chase
-                if (lungeRoutine == null)
-                    Chase();
+                // Spider lunge: only if configured, off cooldown, and within lungeRange (but not already in melee)
+                if (isSpider && Time.time - lastLungeTime >= lungeCooldown && distanceToPlayer <= lungeRange && distanceToPlayer > attackRange)
+                {
+                    if (lungeRoutine == null)
+                        lungeRoutine = StartCoroutine(LungeTowardsPlayer());
+                }
+                else
+                {
+                    // If currently lunging, don't override; otherwise normal chase
+                    if (lungeRoutine == null)
+                        Chase();
+                }
             }
         }
         else
@@ -140,42 +197,149 @@ public class EnemyAI : MonoBehaviour
             // resume patrolling and scanning behavior
             Patrol();
         }
+
+        if (isSnake)
+        {
+            RecordMovement();
+            MoveBody();
+        }
+    }
+
+    IEnumerator PerformBeamAttack()
+    {
+        if (weapon == null) yield break;
+
+        lastBeamTime = Time.time;
+
+        // Stop movement while firing beam
+        if (agent != null) agent.isStopped = true;
+
+        // Ensure weapon is set up for AI usage
+        weapon.playerWeapon = false;
+
+        // Start beam
+        weapon.isFiring = true;
+
+        // Wait for beamDuration (real-time scaled by timeScale as usual)
+        float elapsed = 0f;
+        while (elapsed < beamDuration)
+        {
+            // If player lost or no line of sight, optionally break early
+            if (player == null || !CanSeePlayer())
+                break;
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        // Stop beam
+        weapon.isFiring = false;
+        weapon.StopBeam();
+
+        // Resume movement
+        if (agent != null)
+        {
+            agent.isStopped = false;
+            agent.SetDestination(player != null ? player.position : transform.position);
+        }
+
+        beamRoutine = null;
     }
 
     void Patrol()
     {
-        if (patrolPoints == null || patrolPoints.Length == 0) return;
-
-        Vector3 baseTarget = patrolPoints[currentPatrolIndex].position;
-        Vector3 desiredTarget = baseTarget;
-
-        // Apply simple separation steering to avoid nearby allies while patrolling
-        if (!isScanning)
+        // If there are explicit patrol points, use the original patrol behaviour
+        if (patrolPoints != null && patrolPoints.Length > 0)
         {
-            Vector3 separation = ComputeSeparationVector();
-            if (separation != Vector3.zero)
+            Vector3 baseTarget = patrolPoints[currentPatrolIndex].position;
+            Vector3 desiredTarget = baseTarget;
+
+            // Apply simple separation steering to avoid nearby allies while patrolling
+            if (!isScanning)
             {
-                Vector3 candidate = baseTarget + separation;
-                // ensure the candidate target lies on the NavMesh
-                if (NavMesh.SamplePosition(candidate, out NavMeshHit hit, separationRadius, NavMesh.AllAreas))
-                    desiredTarget = hit.position;
-                else
-                    desiredTarget = baseTarget; // fallback
+                Vector3 separation = ComputeSeparationVector();
+                if (separation != Vector3.zero)
+                {
+                    Vector3 candidate = baseTarget + separation;
+                    // ensure the candidate target lies on the NavMesh
+                    if (NavMesh.SamplePosition(candidate, out NavMeshHit hit, separationRadius, NavMesh.AllAreas))
+                        desiredTarget = hit.position;
+                    else
+                        desiredTarget = baseTarget; // fallback
+                }
+            }
+
+            // Only update destination if it's meaningfully different to avoid spamming SetDestination
+            if (!agent.hasPath || Vector3.Distance(agent.destination, desiredTarget) > 0.5f)
+            {
+                agent.isStopped = false;
+                agent.SetDestination(desiredTarget);
+            }
+
+            // If close to base patrol point (not the separated target), start scanning
+            if (!isScanning && Vector3.Distance(transform.position, baseTarget) < 1f)
+            {
+                // begin a scanning sweep; once finished the coroutine moves to next patrol point
+                scanRoutine = StartCoroutine(ScanForPlayerThenAdvance());
             }
         }
-
-        // Only update destination if it's meaningfully different to avoid spamming SetDestination
-        if (!agent.hasPath || Vector3.Distance(agent.destination, desiredTarget) > 0.5f)
+        else
         {
-            agent.isStopped = false;
-            agent.SetDestination(desiredTarget);
+            // No patrolPoints: wander across the terrain or within radius
+            Wander();
+        }
+    }
+
+    // Wander across NavMesh. If wanderEntireTerrain==true and a Terrain exists, sample within terrain bounds; otherwise sample within wanderRadius around enemy.
+    void Wander()
+    {
+        wanderTimer += Time.deltaTime;
+
+        bool needNewTarget = false;
+        if (!agent.hasPath) needNewTarget = true;
+        else if (Vector3.Distance(transform.position, currentWanderTarget) < 1.0f) needNewTarget = true;
+        else if (wanderTimer >= wanderInterval) needNewTarget = true;
+
+        if (!needNewTarget) return;
+
+        wanderTimer = 0f;
+
+        Vector3 sampleCenter = transform.position;
+        float sampleRadius = wanderRadius;
+
+        if (wanderEntireTerrain && Terrain.activeTerrain != null)
+        {
+            var terrain = Terrain.activeTerrain;
+            var tpos = terrain.GetPosition();
+            var tsize = terrain.terrainData.size;
+            // pick random point inside terrain bounds
+            float rx = Random.Range(tpos.x, tpos.x + tsize.x);
+            float rz = Random.Range(tpos.z, tpos.z + tsize.z);
+            sampleCenter = new Vector3(rx, transform.position.y, rz);
+            // use a larger radius so NavMesh sampling can find nearby nav points
+            sampleRadius = Mathf.Max(tsize.x, tsize.z) * 0.5f;
         }
 
-        // If close to base patrol point (not the separated target), start scanning
-        if (!isScanning && Vector3.Distance(transform.position, baseTarget) < 1f)
+        // Try to find a valid NavMesh point near sampleCenter
+        Vector3 randomDir = Random.insideUnitSphere * sampleRadius;
+        randomDir.y = 0f;
+        Vector3 candidate = sampleCenter + randomDir;
+
+        if (NavMesh.SamplePosition(candidate, out NavMeshHit hit, sampleRadius, NavMesh.AllAreas))
         {
-            // begin a scanning sweep; once finished the coroutine moves to next patrol point
-            scanRoutine = StartCoroutine(ScanForPlayerThenAdvance());
+            currentWanderTarget = hit.position;
+            agent.isStopped = false;
+            agent.SetDestination(currentWanderTarget);
+        }
+        else
+        {
+            // fallback: try smaller radius around current position
+            if (NavMesh.SamplePosition(transform.position + Random.insideUnitSphere * wanderRadius, out hit, wanderRadius, NavMesh.AllAreas))
+            {
+                currentWanderTarget = hit.position;
+                agent.isStopped = false;
+                agent.SetDestination(currentWanderTarget);
+            }
         }
     }
 
@@ -435,6 +599,101 @@ public class EnemyAI : MonoBehaviour
             scanRoutine = null;
             isScanning = false;
             agent.isStopped = false;
+        }
+    }
+
+    [Header("Snake Movement")]
+    public bool isSnake = false;
+
+    public Transform[] bodySegments;
+    public float segmentSpacing = 0.5f;
+    public float followSpeed = 10f;
+
+    // Wave motion
+    public float waveAmplitude = 0.2f;
+    public float waveFrequency = 5f;
+
+    // Position history
+    private List<Vector3> positionHistory = new List<Vector3>();
+
+    void RecordMovement()
+    {
+        if (positionHistory.Count == 0)
+        {
+            positionHistory.Add(transform.position);
+            return;
+        }
+
+        // Only add new point if we've moved enough
+        float dist = Vector3.Distance(transform.position, positionHistory[0]);
+
+        if (dist > 0.1f)
+        {
+            positionHistory.Insert(0, transform.position);
+        }
+
+        // Limit history
+        int maxHistory = Mathf.CeilToInt(bodySegments.Length * segmentSpacing * 10);
+        if (positionHistory.Count > maxHistory)
+            positionHistory.RemoveAt(positionHistory.Count - 1);
+    }
+
+    void MoveBody()
+    {
+        if (positionHistory.Count < 2) return;
+
+        float distanceTravelled = 0f;
+        int historyIndex = 0;
+
+        for (int i = 0; i < bodySegments.Length; i++)
+        {
+            float targetDistance = (i + 1) * segmentSpacing;
+
+            // Walk through history until we reach the correct distance
+            while (historyIndex < positionHistory.Count - 1)
+            {
+                float dist = Vector3.Distance(
+                    positionHistory[historyIndex],
+                    positionHistory[historyIndex + 1]
+                );
+
+                if (distanceTravelled + dist >= targetDistance)
+                    break;
+
+                distanceTravelled += dist;
+                historyIndex++;
+            }
+
+            Vector3 pointA = positionHistory[historyIndex];
+            Vector3 pointB = positionHistory[Mathf.Min(historyIndex + 1, positionHistory.Count - 1)];
+
+            float remaining = targetDistance - distanceTravelled;
+            float segmentLength = Vector3.Distance(pointA, pointB);
+
+            Vector3 targetPos = (segmentLength > 0.001f)
+                ? Vector3.Lerp(pointA, pointB, remaining / segmentLength)
+                : pointA;
+
+            //Add wave motion
+            float wave = Mathf.Sin(Time.time * waveFrequency + i * 0.5f) * waveAmplitude;
+            Vector3 offset = transform.right * wave;
+
+            bodySegments[i].position = Vector3.Lerp(
+                bodySegments[i].position,
+                targetPos + offset,
+                followSpeed * Time.deltaTime
+            );
+
+            // Rotate properly
+            Vector3 dir = pointB - pointA;
+            if (dir != Vector3.zero)
+            {
+                bodySegments[i].rotation = Quaternion.Slerp(
+                    bodySegments[i].rotation,
+                    Quaternion.LookRotation(dir),
+                    followSpeed * Time.deltaTime
+                );
+            }
         }
     }
 }
