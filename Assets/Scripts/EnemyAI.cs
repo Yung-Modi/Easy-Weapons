@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -57,7 +57,9 @@ public class EnemyAI : MonoBehaviour
 
     // Jane Juliet beam attack configuration
     [Header("Jane Juliet - Beam Attack")]
-    [Tooltip("If this enemy GameObject uses the tag 'jane juliet', it can perform a beam attack using Weapon.cs.")]
+    [Tooltip("Enable to allow this enemy to use the beam attack (alternatively tag the GameObject 'jane juliet').")]
+    public bool isJaneJuliet = false;
+    [Tooltip("If this enemy GameObject uses the tag 'jane juliet' or the toggle is set, it can perform a beam attack using Weapon.cs.")]
     public float beamRange = 15f;              // max distance to use beam
     public float beamDuration = 3f;            // how long beam fires
     public float beamCooldown = 8f;            // cooldown between beam uses
@@ -134,8 +136,8 @@ public class EnemyAI : MonoBehaviour
 
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
 
-        // If this enemy is "jane juliet" and holds a Weapon (beam-capable), try beam attack first (mid/long range)
-        if (CompareTag("jane juliet") && weapon != null && weapon.type == WeaponType.Beam)
+        // If this enemy is "jane juliet" via toggle or tag and holds a Weapon (beam-capable), try beam attack first (mid/long range)
+        if ((isJaneJuliet || CompareTag("jane juliet")) && weapon != null && weapon.type == WeaponType.Beam)
         {
             if (distanceToPlayer <= beamRange && CanSeePlayer() && Time.time - lastBeamTime >= beamCooldown && beamRoutine == null && distanceToPlayer > attackRange)
             {
@@ -211,32 +213,38 @@ public class EnemyAI : MonoBehaviour
 
         lastBeamTime = Time.time;
 
-        // Stop movement while firing beam
         if (agent != null) agent.isStopped = true;
 
-        // Ensure weapon is set up for AI usage
         weapon.playerWeapon = false;
 
-        // Start beam
-        weapon.isFiring = true;
+        float elapsed = 0f; // ✅ MUST be declared BEFORE the loop
 
-        // Wait for beamDuration (real-time scaled by timeScale as usual)
-        float elapsed = 0f;
         while (elapsed < beamDuration)
         {
-            // If player lost or no line of sight, optionally break early
             if (player == null || !CanSeePlayer())
                 break;
 
-            elapsed += Time.deltaTime;
+            // Rotate toward player
+            Vector3 dir = (player.position - transform.position);
+            dir.y = 0f;
+
+            if (dir.sqrMagnitude > 0.01f)
+            {
+                Quaternion targetRot = Quaternion.LookRotation(dir);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, 8f * Time.deltaTime);
+            }
+
+            // Fire beam every frame
+            weapon.AIFiring();
+
+            elapsed += Time.deltaTime; // ✅ now it's valid
+
             yield return null;
         }
 
         // Stop beam
-        weapon.isFiring = false;
         weapon.StopBeam();
 
-        // Resume movement
         if (agent != null)
         {
             agent.isStopped = false;
@@ -529,7 +537,7 @@ public class EnemyAI : MonoBehaviour
         var hits = Physics.RaycastAll(origin, dir.normalized, maxDistance);
         if (hits == null || hits.Length == 0)
         {
-            // No hits toward the player � cannot confirm visibility
+            // No hits toward the player — cannot confirm visibility
             return false;
         }
 

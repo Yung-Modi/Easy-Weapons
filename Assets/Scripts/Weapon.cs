@@ -568,7 +568,7 @@ public class Weapon : MonoBehaviour
         }
 
         // Ammo Display (custom style: larger font, black color)
-        if (showCurrentAmmo)
+        if (showCurrentAmmo && !IsjanejulietTarget())
         {
             if (ammoGuiStyle == null)
             {
@@ -580,8 +580,13 @@ public class Weapon : MonoBehaviour
 
             if (type == WeaponType.Raycast || type == WeaponType.Projectile)
                 GUI.Label(new Rect(ammoGuiMargin, Screen.height - ammoGuiMargin - ammoGuiHeight, ammoGuiWidth, ammoGuiHeight), "Ammo: " + currentAmmo, ammoGuiStyle);
-            else if (type == WeaponType.Beam)
-                GUI.Label(new Rect(ammoGuiMargin, Screen.height - ammoGuiMargin - ammoGuiHeight, ammoGuiWidth, ammoGuiHeight), "Heat: " + (int)(beamHeat * 100) + "/" + (int)(maxBeamHeat * 100), ammoGuiStyle);
+            else if (type == WeaponType.Beam && !IsjanejulietTarget())
+                GUI.Label
+                (
+                    new Rect(ammoGuiMargin, Screen.height - ammoGuiMargin - ammoGuiHeight, ammoGuiWidth, ammoGuiHeight),
+                    "Heat: " + (int)(beamHeat * 100) + "/" + (int)(maxBeamHeat * 100),
+                    ammoGuiStyle
+                );
         }
     }
 
@@ -1168,5 +1173,9 @@ public class Weapon : MonoBehaviour
         if (gameObject.activeInHierarchy)
             isReloading = virtualReloadState;
     }
-}
 
+    bool IsjanejulietTarget()
+    {
+        return transform.root.CompareTag("jane juliet");
+    }
+}
